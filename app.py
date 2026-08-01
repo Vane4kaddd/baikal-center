@@ -28,8 +28,8 @@ app = Flask(__name__)
 # ============================================================
 if "AMVERA" in os.environ:
     # На Amvera используем PostgreSQL
-    INSTANCE_PATH = "/data/instance"
-    UPLOAD_PATH = "/data/uploads"
+    INSTANCE_PATH = os.path.join(os.path.expanduser("~"), "data", "instance")
+    UPLOAD_PATH = os.path.join(os.path.expanduser("~"), "data", "uploads")
     
     # PostgreSQL подключение
     DB_USER = os.environ.get('DB_USER', 'postgres')
