@@ -13,6 +13,7 @@ import uuid
 import logging
 from dotenv import load_dotenv
 from flask_wtf.csrf import generate_csrf
+from flask import send_from_directory
 
 # Загружаем переменные из .env файла
 load_dotenv()
@@ -576,6 +577,10 @@ def admin_move_gallery_photo(id, direction):
     return redirect(url_for('admin_gallery'))
 
 
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_PATH, filename)
+    
 # ============== УПРАВЛЕНИЕ НОМЕРАМИ ==============
 
 @app.route('/admin/rooms')
