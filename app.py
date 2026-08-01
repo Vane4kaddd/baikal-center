@@ -38,11 +38,11 @@ if "AMVERA" in os.environ:
     UPLOAD_PATH = os.path.join(os.path.expanduser("~"), "data", "uploads")
     
     # PostgreSQL подключение
-    DB_USER = os.environ.get('DB_USER', 'postgres')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
-    DB_HOST = os.environ.get('DB_HOST', 'localhost')
-    DB_PORT = os.environ.get('DB_PORT', '5432')
-    DB_NAME = os.environ.get('DB_NAME', 'baikal')
+    DB_USER = os.environ.get('DB_USER', 'postgres').strip()
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', '').strip()
+    DB_HOST = os.environ.get('DB_HOST', 'localhost').strip()
+    DB_PORT = os.environ.get('DB_PORT', '5432').strip()
+    DB_NAME = os.environ.get('DB_NAME', 'baikal').strip()
     # ДОБАВИТЬ ЭТУ ДИАГНОСТИКУ:
     print(f"ИМЯ БАЗЫ (КАК ЕЁ ВИДИТ PYTHON): '{DB_NAME}'")
     # ------------------------------------------
