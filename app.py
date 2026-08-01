@@ -26,6 +26,12 @@ app = Flask(__name__)
 # ============================================================
 # 🚀 НАСТРОЙКИ ДЛЯ AMVERA (ПОСТОЯННОЕ ХРАНИЛИЩЕ)
 # ============================================================
+import sys
+print(f"--- ДИАГНОСТИКА ---")
+print(f"Значение AMVERA: {os.environ.get('AMVERA')}")
+print(f"Значение DB_HOST: {os.environ.get('DB_HOST')}")
+print(f"Все переменные (первые 5): {list(os.environ.keys())[:5]}")
+print(f"--- КОНЕЦ ДИАГНОСТИКИ ---")
 if "AMVERA" in os.environ:
     # На Amvera используем PostgreSQL
     INSTANCE_PATH = os.path.join(os.path.expanduser("~"), "data", "instance")
