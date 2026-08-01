@@ -927,7 +927,7 @@ def admin_add_document():
     return render_template('admin/add_document.html')
 
 
-@app.route('/admin/documents/<int:id>/delete')
+@app.route('/admin/documents/<int:id>/delete', methods=['GET', 'POST'])
 @admin_required
 def admin_delete_document(id):
     update_last_activity()
