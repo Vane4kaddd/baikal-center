@@ -81,7 +81,9 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 # Секретный ключ для доступа к админ-панели (храните в .env)
 ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'my-super-secret-key-2026')
 ADMIN_PATH = os.environ.get('ADMIN_PATH', '/control-panel')
-
+# ✅ ДОБАВЬТЕ ЭТУ ДИАГНОСТИКУ
+print(f"ADMIN_PATH: {ADMIN_PATH}")
+print(f"ADMIN_SECRET_KEY (первые 5 символов): {ADMIN_SECRET_KEY[:5]}...")
 # ⚡ КЛЮЧЕВОЕ: автоматическое определение протокола
 @app.before_request
 def set_secure_cookie():
