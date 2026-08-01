@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Вход | Байкал-центр</title>
+    
+    <!-- ✅ Security Headers -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0B3B3B;
+            --primary-dark: #062626;
+            --gold: #D4AF37;
+            --gold-light: #F5E6B8;
+            --dark: #1A1A1A;
+            --white: #FFFFFF;
+            --gray: #757575;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7f6 0%, #e8ece9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        
+        .login-card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 35px 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-logo i {
+            font-size: 3.5rem;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        
+        .login-logo h2 {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        
+        .login-logo span {
+            color: var(--gold);
+        }
+        
+        .login-logo p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .form-label i {
+            color: var(--gold);
+            margin-right: 6px;
+        }
+        
+        .form-label .required {
+            color: #dc3545;
+            margin-left: 2px;
+        }
+        
+        .form-control {
+            border: 2px solid rgba(11, 59, 59, 0.1);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--white);
+            width: 100%;
+        }
+        
+        .form-control:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+            outline: none;
+        }
+        
+        /* ✅ ДОБАВЛЕНО: стиль для ошибки */
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.12);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            padding: 14px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+            border: 1px solid var(--gold);
+            cursor: pointer;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(11, 59, 59, 0.3);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-login i {
+            margin-right: 8px;
+            color: var(--gold);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            color: #2E7D32;
+            border-left: 4px solid #2E7D32;
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            color: #0D47A1;
+            border-left: 4px solid #0D47A1;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+            color: #e65100;
+            border-left: 4px solid #e65100;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        
+        .back-link a:hover {
+            color: var(--gold);
+        }
+        
+        .back-link i {
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                align-items: flex-start;
+                padding-top: 40px;
+            }
+            
+            .login-card {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+            
+            .login-logo {
+                margin-bottom: 25px;
+            }
+            
+            .login-logo i {
+                font-size: 3rem;
+            }
+            
+            .login-logo h2 {
+                font-size: 1.5rem;
+            }
+            
+            .login-logo p {
+                font-size: 0.85rem;
+            }
+            
+            .form-label {
+                font-size: 0.75rem;
+            }
+            
+            .form-control {
+                padding: 12px 14px;
+                font-size: 0.95rem;
+            }
+            
+            .btn-login {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding-top: 20px;
+            }
+            
+            .login-card {
+                padding: 20px 16px;
+            }
+            
+            .login-logo i {
+                font-size: 2.5rem;
+            }
+            
+            .login-logo h2 {
+                font-size: 1.3rem;
+            }
+            
+            .form-control {
+                padding: 10px 12px;
+            }
+            
+            .btn-login {
+                padding: 10px 18px;
+            }
+            
+            .alert {
+                padding: 10px 14px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .login-card {
+                padding: 18px 14px;
+            }
+            
+            .login-logo h2 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-mountain"></i>
+                <h2>БАЙКАЛ<span>-ЦЕНТР</span></h2>
+                <p>Панель управления</p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                            {{ message | e }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" id="loginForm" novalidate>
+                <!-- ✅ CSRF-токен -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-4">
+                    <label class="form-label" for="password">
+                        <i class="fas fa-lock"></i> Пароль
+                        <span class="required">*</span>
+                    </label>
+                    <input type="password" 
+                           name="password" 
+                           id="password"
+                           class="form-control" 
+                           placeholder="Введите пароль" 
+                           required 
+                           autofocus 
+                           autocomplete="off"
+                           aria-required="true"
+                           aria-label="Пароль администратора">
+                    <div class="invalid-feedback" id="passwordError">
+                        Введите пароль
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-login" id="submitBtn">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
+            </form>
+            
+            <div class="back-link">
+                <a href="{{ url_for('home') }}">
+                    <i class="fas fa-arrow-left"></i> Вернуться на сайт
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Валидация пароля
+            function validatePassword() {
+                const value = passwordInput.value;
+                if (value.length < 1) {
+                    passwordInput.classList.add('is-invalid');
+                    return false;
+                }
+                passwordInput.classList.remove('is-invalid');
+                return true;
+            }
+            
+            passwordInput.addEventListener('input', validatePassword);
+            passwordInput.addEventListener('blur', validatePassword);
+            
+            // Отправка формы
+            form.addEventListener('submit', function(e) {
+                if (!validatePassword()) {
+                    e.preventDefault();
+                    passwordInput.focus();
+                    return false;
+                }
+                
+                // Блокируем кнопку для предотвращения двойной отправки
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Вход...';
+            });
+        });
+    </script>
+</body>
+</html>

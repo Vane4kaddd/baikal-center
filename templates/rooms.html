@@ -1,0 +1,369 @@
+<!-- templates/rooms.html -->
+{% extends "base.html" %}
+
+{% block title %}Номера — Байкал-центр Горячинск{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-4" data-aos="fade-up">
+            <div class="section-subtitle">РАЗМЕЩЕНИЕ</div>
+            <h1 class="section-title">Все номера базы отдыха</h1>
+            <div class="section-line mx-auto"></div>
+            <p class="text-muted">От Стандарта до Джуниор сюита — выберите идеальный номер для вашего отдыха на Байкале</p>
+        </div>
+        
+        <!-- ФИЛЬТР ПО КАТЕГОРИЯМ — ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ -->
+        <div class="categories-filter" data-aos="fade-up" data-aos-delay="100">
+            <div class="filter-scroll-wrapper">
+                <div class="filter-scroll">
+                    <a href="{{ url_for('room_list') }}" 
+                    class="category-chip {{ 'active' if not selected_category else '' }}"
+                    aria-label="Показать все номера">
+                        <i class="fas fa-th-large"></i>
+                        <span>Все</span>
+                    </a>
+                    
+                    {% for category in categories %}
+                    <a href="{{ url_for('room_list', category=category.slug) }}" 
+                    class="category-chip {{ 'active' if selected_category and selected_category.id == category.id else '' }}"
+                    aria-label="Показать номера категории {{ category.name | e }}">
+                        <span>{{ category.name | e }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <style>
+            /* ===== ФИЛЬТР — ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ===== */
+            .categories-filter {
+                margin-bottom: 30px;
+            }
+            
+            .filter-scroll-wrapper {
+                position: relative;
+                max-width: 100%;
+                overflow: hidden;
+            }
+            
+            .filter-scroll {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                overflow-y: visible;
+                padding: 10px 15px 15px;
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none; /* IE */
+            }
+            
+            .filter-scroll::-webkit-scrollbar {
+                display: none; /* Chrome, Safari */
+            }
+            
+            .category-chip {
+                flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                border-radius: 50px;
+                font-weight: 500;
+                font-size: 0.9rem;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                background: var(--white);
+                color: var(--dark);
+                border: 1.5px solid rgba(212, 175, 55, 0.2);
+                white-space: nowrap;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            }
+            
+            .category-chip i {
+                font-size: 0.9rem;
+                color: var(--gold);
+            }
+            
+            .category-chip:hover {
+                background: var(--gold);
+                color: var(--white);
+                border-color: var(--gold);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+            }
+            
+            .category-chip:hover i {
+                color: var(--white);
+            }
+            
+            .category-chip.active {
+                background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+                color: var(--dark);
+                border-color: var(--gold);
+                font-weight: 600;
+                box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+            }
+            
+            .category-chip.active i {
+                color: var(--dark);
+            }
+            
+            /* Десктоп — без скролла, всё в ряд */
+            @media (min-width: 769px) {
+                .filter-scroll {
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    overflow-x: visible;
+                    padding: 5px 0 10px;
+                }
+                
+                .category-chip {
+                    padding: 12px 28px;
+                    font-size: 1rem;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .category-chip {
+                    padding: 8px 16px;
+                    font-size: 0.8rem;
+                    gap: 6px;
+                }
+                
+                .category-chip i {
+                    font-size: 0.8rem;
+                }
+            }
+        </style>
+        
+        <!-- Счётчик найденных номеров -->
+        <div class="text-center mb-4" data-aos="fade-up" data-aos-delay="150">
+            <p class="text-muted">
+                <i class="fas fa-bed me-1" style="color: var(--gold);"></i>
+                Найдено номеров: <strong>{{ rooms|length }}</strong>
+                {% if selected_category %}
+                в категории "{{ selected_category.name | e }}"
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- Список номеров — АДАПТИВНАЯ СЕТКА -->
+        <div class="rooms-grid">
+            {% for room in rooms %}
+            <a href="{{ url_for('room_detail', slug=room.slug) }}" class="room-card-link" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}" aria-label="Подробнее о номере {{ room.name | e }}">
+                <div class="room-card-wrapper">
+                    <div class="room-card-gallery">
+                        {% if room.main_photo %}
+                        <img src="{{ room.main_photo | e }}" alt="{{ room.name | e }}" class="room-card-image" loading="lazy" decoding="async">
+                        {% else %}
+                        <img src="https://images.unsplash.com/photo-1587061949409-02df41d5a562?w=800" alt="{{ room.name | e }}" class="room-card-image" loading="lazy" decoding="async">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="room-card-info">
+                        <div class="room-card-category">{{ room.category.name | e if room.category else 'Номер' }}</div>
+                        <h3 class="room-card-title">{{ room.name | e }}</h3>
+                        <div class="room-card-price">{{ room.price | e }} ₽ <small>/ сутки</small></div>
+                        <div class="room-card-details">
+                            <span class="room-feature"><i class="fas fa-user"></i> {{ room.capacity | pluralize('гость', 'гостя', 'гостей') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% else %}
+            <div class="empty-state" data-aos="fade-up">
+                <i class="fas fa-bed fa-3x text-muted mb-3"></i>
+                <h3>Номера не найдены</h3>
+                <p class="text-muted">Попробуйте выбрать другую категорию</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Сетка — АДАПТИВНАЯ */
+    .rooms-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+    
+    .room-card-link {
+        text-decoration: none;
+        display: block;
+        height: 100%;
+    }
+    
+    .room-card-wrapper {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: none;
+        background: transparent;
+        transition: transform 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+    }
+    
+    .room-card-wrapper:hover {
+        transform: translateY(-3px);
+        box-shadow: none;
+        border-color: var(--gold);
+    }
+    
+    .room-card-gallery {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .room-card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .room-card-wrapper:hover .room-card-image {
+        transform: scale(1.05);
+    }
+    
+    .room-card-info {
+        padding: 16px 14px;
+        flex: 1;
+        background: transparent;
+    }
+    
+    .room-card-category {
+        color: var(--gold);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 4px;
+    }
+    
+    .room-card-title {
+        color: var(--dark);
+        font-size: 1rem;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    
+    .room-card-price {
+        color: var(--gold);
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    
+    .room-card-price small {
+        color: var(--gray);
+        font-size: 0.75rem;
+        font-weight: 400;
+    }
+    
+    .room-feature {
+        color: var(--gray);
+        font-size: 0.75rem;
+    }
+    
+    .room-feature i {
+        color: var(--gold);
+        margin-right: 4px;
+    }
+    
+    .empty-state {
+        grid-column: span 4;
+        text-align: center;
+        padding: 50px 20px;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1200px) {
+        .rooms-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .empty-state {
+            grid-column: span 3;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .rooms-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .room-card-gallery {
+            height: 180px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .rooms-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .empty-state {
+            grid-column: span 2;
+        }
+        .room-card-gallery {
+            height: 200px;
+        }
+        .room-card-info {
+            padding: 14px;
+        }
+        .room-card-title {
+            font-size: 1rem;
+        }
+        .room-card-price {
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .rooms-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .room-card-gallery {
+            height: 160px;
+        }
+        .room-card-info {
+            padding: 10px;
+        }
+        .room-card-title {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .room-card-price {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .room-card-category {
+            font-size: 0.65rem;
+            margin-bottom: 3px;
+        }
+        .room-feature {
+            font-size: 0.7rem;
+        }
+    }
+    
+    @media (max-width: 360px) {
+        .rooms-grid {
+            grid-template-columns: 1fr;
+        }
+        .empty-state {
+            grid-column: span 1;
+        }
+        .room-card-gallery {
+            height: 200px;
+        }
+    }
+</style>
+{% endblock %}

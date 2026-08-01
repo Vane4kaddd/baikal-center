@@ -1,0 +1,538 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Документы | Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== ОБЩИЕ СТИЛИ ===== */
+    .docs-page {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    /* ===== ЗАГОЛОВОК ===== */
+    .docs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .docs-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    
+    .docs-header-left .icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.05));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        font-size: 1.3rem;
+    }
+    
+    .docs-header-left h1 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        font-size: 1.5rem;
+        color: var(--primary-dark);
+        margin: 0;
+        letter-spacing: -0.3px;
+    }
+    
+    .docs-header-left .count {
+        font-size: 0.85rem;
+        color: var(--gray);
+        font-weight: 400;
+        font-family: 'Montserrat', sans-serif;
+        background: var(--gray-100);
+        padding: 2px 12px;
+        border-radius: 20px;
+        margin-left: 6px;
+    }
+    
+    .btn-add {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        border-radius: 50px;
+        background: var(--primary);
+        color: white;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-add:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(11, 59, 59, 0.2);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-add i {
+        font-size: 0.95rem;
+    }
+    
+    /* ===== СПИСОК ДОКУМЕНТОВ ===== */
+    .docs-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .doc-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: var(--white);
+        border-radius: 14px;
+        border: 1px solid rgba(11, 59, 59, 0.06);
+        transition: all 0.3s ease;
+        gap: 16px;
+    }
+    
+    .doc-item:hover {
+        border-color: rgba(212, 175, 55, 0.25);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        transform: translateY(-1px);
+    }
+    
+    .doc-item-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .doc-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(220, 53, 69, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #dc3545;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .doc-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .doc-info .title {
+        font-weight: 500;
+        color: var(--primary-dark);
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .doc-info .meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.75rem;
+        color: var(--gray);
+    }
+    
+    .doc-info .meta .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 10px;
+        border-radius: 30px;
+        font-weight: 500;
+        font-size: 0.7rem;
+    }
+    
+    .doc-info .meta .status.published {
+        background: rgba(46, 125, 50, 0.1);
+        color: #2E7D32;
+    }
+    
+    .doc-info .meta .status.hidden {
+        background: rgba(158, 158, 158, 0.1);
+        color: #757575;
+    }
+    
+    .doc-info .meta .status i {
+        font-size: 0.65rem;
+    }
+    
+    .doc-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    
+    .doc-actions .btn-open {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 30px;
+        background: transparent;
+        border: 1.5px solid rgba(11, 59, 59, 0.1);
+        color: var(--primary-dark);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .doc-actions .btn-open:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .doc-actions .btn-open i {
+        font-size: 0.8rem;
+    }
+    
+    .doc-actions .btn-delete {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(220, 53, 69, 0.15);
+        background: transparent;
+        color: #dc3545;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.85rem;
+        border: none;
+    }
+    
+    .doc-actions .btn-delete:hover {
+        background: #dc3545;
+        border-color: #dc3545;
+        color: white;
+        transform: scale(1.05);
+        text-decoration: none;
+    }
+    
+    /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--white);
+        border-radius: 16px;
+        border: 1px dashed rgba(11, 59, 59, 0.08);
+    }
+    
+    .empty-state .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        background: rgba(212, 175, 55, 0.06);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        font-size: 2rem;
+    }
+    
+    .empty-state h3 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin-bottom: 4px;
+        font-size: 1.1rem;
+    }
+    
+    .empty-state p {
+        color: var(--gray);
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+    }
+    
+    .empty-state .btn-add-empty {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        border-radius: 50px;
+        background: var(--gold);
+        color: var(--primary-dark);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .empty-state .btn-add-empty:hover {
+        background: var(--gold-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+        color: var(--primary-dark);
+        text-decoration: none;
+    }
+    
+    /* ===== АДАПТИВНОСТЬ ===== */
+    @media (max-width: 768px) {
+        .docs-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        
+        .docs-header-left h1 {
+            font-size: 1.2rem;
+        }
+        
+        .btn-add {
+            justify-content: center;
+            padding: 10px 18px;
+        }
+        
+        .doc-item {
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            gap: 12px;
+        }
+        
+        .doc-item-left {
+            width: 100%;
+        }
+        
+        .doc-actions {
+            width: 100%;
+            justify-content: flex-end;
+            padding-top: 10px;
+            border-top: 1px solid rgba(11, 59, 59, 0.05);
+        }
+        
+        .doc-info .title {
+            font-size: 0.9rem;
+        }
+        
+        .doc-info .meta {
+            font-size: 0.7rem;
+            flex-wrap: wrap;
+        }
+        
+        .doc-actions .btn-open {
+            padding: 5px 12px;
+            font-size: 0.75rem;
+        }
+        
+        .doc-actions .btn-delete {
+            width: 30px;
+            height: 30px;
+            font-size: 0.8rem;
+        }
+        
+        .empty-state {
+            padding: 40px 16px;
+        }
+        
+        .empty-state .empty-icon {
+            width: 52px;
+            height: 52px;
+            font-size: 1.6rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .docs-header-left .icon-wrap {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        
+        .docs-header-left h1 {
+            font-size: 1.1rem;
+        }
+        
+        .docs-header-left .count {
+            font-size: 0.75rem;
+        }
+        
+        .doc-item {
+            padding: 12px 14px;
+            border-radius: 12px;
+        }
+        
+        .doc-icon {
+            width: 34px;
+            height: 34px;
+            font-size: 1rem;
+        }
+        
+        .doc-info .title {
+            font-size: 0.85rem;
+        }
+        
+        .doc-actions {
+            gap: 4px;
+        }
+        
+        .doc-actions .btn-open {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+        }
+        
+        .doc-actions .btn-open span {
+            display: none;
+        }
+        
+        .doc-actions .btn-delete {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-page">
+    <!-- Заголовок -->
+    <div class="docs-header">
+        <div class="docs-header-left">
+            <div class="icon-wrap">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <h1>
+                Документы
+                <span class="count">{{ documents|length }}</span>
+            </h1>
+        </div>
+        <a href="{{ url_for('admin_add_document') }}" class="btn-add">
+            <i class="fas fa-plus"></i> Добавить PDF
+        </a>
+    </div>
+    
+    <!-- Список документов -->
+    {% if documents %}
+    <div class="docs-list">
+        {% for doc in documents %}
+        <div class="doc-item">
+            <div class="doc-item-left">
+                <div class="doc-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="doc-info">
+                    <div class="title">{{ doc.title | e }}</div>
+                    <div class="meta">
+                        {% if doc.is_published %}
+                        <span class="status published">
+                            <i class="fas fa-check-circle"></i> Опубликован
+                        </span>
+                        {% else %}
+                        <span class="status hidden">
+                            <i class="fas fa-eye-slash"></i> Скрыт
+                        </span>
+                        {% endif %}
+                        <span>·</span>
+                        <span>ID: {{ doc.id | e }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="doc-actions">
+                <a href="{{ doc.file_path | e }}" target="_blank" rel="noopener noreferrer" class="btn-open"
+                   aria-label="Открыть документ {{ doc.title | e }}">
+                    <i class="fas fa-eye"></i>
+                    <span>Открыть</span>
+                </a>
+                
+                <!-- ✅ БЕЗОПАСНОЕ УДАЛЕНИЕ -->
+                <form method="POST" action="{{ url_for('admin_delete_document', id=doc.id) }}" 
+                      style="display: inline-block; margin: 0; padding: 0;"
+                      onsubmit="return confirmDeleteDocument(this, '{{ doc.title | e }}');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-delete" 
+                            title="Удалить документ"
+                            aria-label="Удалить документ {{ doc.title | e }}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Пустое состояние -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-file-pdf"></i>
+        </div>
+        <h3>Нет документов</h3>
+        <p>Добавьте первый PDF-документ</p>
+        <a href="{{ url_for('admin_add_document') }}" class="btn-add-empty">
+            <i class="fas fa-plus"></i> Добавить PDF
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Безопасное подтверждение удаления документа
+     * @param {HTMLFormElement} form - Форма удаления
+     * @param {string} title - Название документа (уже экранировано в шаблоне)
+     * @returns {boolean}
+     */
+    function confirmDeleteDocument(form, title) {
+        // Дополнительная проверка на случай, если title содержит потенциально опасные символы
+        // (хотя они уже экранированы в шаблоне через | e)
+        if (!title || title.trim() === '') {
+            return confirm('Удалить документ?');
+        }
+        return confirm('Удалить документ «' + title + '»?');
+    }
+    
+    // Добавляем обработчики для всех форм удаления (запасной вариант)
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form[action*="admin_delete_document"]').forEach(function(form) {
+            // Если onsubmit уже установлен, не перезаписываем
+            if (!form.onsubmit) {
+                form.addEventListener('submit', function(e) {
+                    // Находим название документа из aria-label кнопки
+                    const btn = this.querySelector('button[type="submit"]');
+                    let title = 'документ';
+                    if (btn) {
+                        const label = btn.getAttribute('aria-label');
+                        if (label && label.includes('Удалить документ')) {
+                            title = label.replace('Удалить документ', '').trim();
+                        }
+                    }
+                    if (!confirm('Удалить документ «' + title + '»?')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

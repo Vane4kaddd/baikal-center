@@ -1,0 +1,41 @@
+# Виртуальное окружение
+venv/
+env/
+ENV/
+
+# База данных
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Загруженные файлы
+uploads/
+static/uploads/
+
+# Файлы окружения
+.env
+*.env
+*.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Логи
+*.log

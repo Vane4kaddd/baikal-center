@@ -1,0 +1,374 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Главная | Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Заголовок */
+    .dashboard-header {
+        margin-bottom: 25px;
+    }
+    
+    .dashboard-header h1 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 5px;
+        font-size: 1.8rem;
+    }
+    
+    .dashboard-header p {
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+    
+    .date-badge {
+        background: var(--primary);
+        color: var(--white);
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        border: 1px solid var(--gold);
+        display: inline-block;
+    }
+    
+    .date-badge i {
+        color: var(--gold);
+        margin-right: 6px;
+    }
+    
+    /* Карточки статистики */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-color: var(--gold);
+    }
+    
+    .stat-card .card-body {
+        padding: 20px 18px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 5px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 500;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-sub {
+        font-size: 0.8rem;
+        opacity: 0.85;
+        margin-top: 6px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-rooms {
+        background: linear-gradient(145deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: white;
+    }
+    
+    .stat-rooms .stat-icon {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--gold);
+    }
+    
+    .stat-categories {
+        background: linear-gradient(145deg, var(--gold) 0%, var(--gold-light) 100%);
+        color: var(--primary-dark);
+    }
+    
+    .stat-categories .stat-icon {
+        background: rgba(11, 59, 59, 0.08);
+        color: var(--primary-dark);
+    }
+    
+    .stat-gallery {
+        background: linear-gradient(145deg, #2C2C2C 0%, var(--dark) 100%);
+        color: white;
+    }
+    
+    .stat-gallery .stat-icon {
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--gold);
+    }
+    
+    .stat-site {
+        background: linear-gradient(145deg, var(--primary-light) 0%, var(--primary) 100%);
+        color: white;
+    }
+    
+    .stat-site .stat-icon {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--gold);
+    }
+    
+    .stat-documents {
+        background: linear-gradient(145deg, #2C3E50 0%, #1A252F 100%);
+        color: white;
+    }
+
+    .stat-documents .stat-icon {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+    
+    /* Быстрые действия */
+    .quick-actions {
+        margin-top: 30px;
+    }
+    
+    .section-title {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin-bottom: 18px;
+        position: relative;
+        display: inline-block;
+        font-size: 1.2rem;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        right: 0;  
+        height: 3px;
+        background: var(--gold);
+        border-radius: 2px;
+    }
+    
+    .action-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 20px 15px;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: block;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        height: 100%;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        border-color: var(--gold);
+    }
+    
+    .action-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin: 0 auto 12px;
+        background: linear-gradient(145deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: var(--gold);
+    }
+    
+    .action-card h4 {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--primary-dark);
+        margin-bottom: 5px;
+    }
+    
+    .action-card p {
+        color: var(--gray);
+        font-size: 0.8rem;
+        margin-bottom: 0;
+    }
+
+    @media (max-width: 1200px) {
+        .stat-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+        }
+        
+        .section-title {
+            display: block;
+            text-align: center;
+        }
+        
+        .section-title::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .dashboard-header {
+            text-align: center !important;
+        }
+        
+        .date-badge {
+            position: static !important;
+            margin-top: 10px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header text-center">
+    <h1><i class="fas fa-tachometer-alt me-2" style="color: var(--gold);"></i>Главная</h1>
+    <p>Добро пожаловать в панель управления «Байкал-центр»</p>
+    <div class="date-badge mt-2">
+        <i class="fas fa-calendar-alt"></i> 
+        {{ now.strftime('%d %B %Y') | e if now else 'Сегодня' }}
+    </div>
+</div>
+
+<div class="stat-grid">
+    <a href="{{ url_for('admin_rooms') }}" class="stat-card stat-rooms" 
+       aria-label="Перейти к управлению номерами">
+        <div class="card-body">
+            <div class="stat-icon"><i class="fas fa-bed"></i></div>
+            <div class="stat-value">{{ rooms_count | e | default(0) }}</div>
+            <div class="stat-label">Номеров</div>
+            <div class="stat-sub"><i class="fas fa-check-circle me-1"></i> {{ available_rooms | e | default(0) }} доступно</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('admin_categories') }}" class="stat-card stat-categories"
+       aria-label="Перейти к управлению категориями">
+        <div class="card-body">
+            <div class="stat-icon"><i class="fas fa-tags"></i></div>
+            <div class="stat-value">{{ categories_count | e | default(0) }}</div>
+            <div class="stat-label">Категорий</div>
+            <div class="stat-sub"><i class="fas fa-layer-group me-1"></i> Типов номеров</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('admin_gallery') }}" class="stat-card stat-gallery"
+       aria-label="Перейти к управлению галереей">
+        <div class="card-body">
+            <div class="stat-icon"><i class="fas fa-images"></i></div>
+            <div class="stat-value">{{ gallery_count | e | default(0) }}</div>
+            <div class="stat-label">Фото</div>
+            <div class="stat-sub"><i class="fas fa-camera me-1"></i> В галерее</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('home') }}" target="_blank" rel="noopener noreferrer" 
+       class="stat-card stat-site" aria-label="Открыть сайт в новой вкладке">
+        <div class="card-body">
+            <div class="stat-icon"><i class="fas fa-eye"></i></div>
+            <div class="stat-value"><i class="fas fa-external-link-alt" style="font-size: 1.5rem;"></i></div>
+            <div class="stat-label">Смотреть сайт</div>
+            <div class="stat-sub"><i class="fas fa-globe me-1"></i> Открыть</div>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('admin_documents') }}" class="stat-card stat-documents"
+       aria-label="Перейти к управлению документами">
+        <div class="card-body">
+            <div class="stat-icon"><i class="fas fa-file-pdf"></i></div>
+            <div class="stat-value">{{ documents_count | e | default(0) }}</div>
+            <div class="stat-label">Документов</div>
+            <div class="stat-sub"><i class="fas fa-certificate me-1"></i> PDF-файлы</div>
+        </div>
+    </a>
+</div>
+
+<div class="quick-actions">
+    <h3 class="section-title"><i class="fas fa-bolt me-2" style="color: var(--gold);"></i>Быстрые действия</h3>
+    <div class="row g-3 mt-2">
+        <div class="col-6 col-md-4">
+            <a href="{{ url_for('admin_add_room') }}" class="action-card"
+               aria-label="Добавить новый номер">
+                <div class="action-icon"><i class="fas fa-plus-circle"></i></div>
+                <h4>Добавить номер</h4>
+                <p>С фото и описанием</p>
+            </a>
+        </div>
+        <div class="col-6 col-md-4">
+            <a href="{{ url_for('admin_add_category') }}" class="action-card"
+               aria-label="Добавить новую категорию">
+                <div class="action-icon"><i class="fas fa-folder-plus"></i></div>
+                <h4>Новая категория</h4>
+                <p>Для номеров</p>
+            </a>
+        </div>
+        <div class="col-6 col-md-4">
+            <a href="{{ url_for('admin_add_gallery_photo') }}" class="action-card"
+               aria-label="Загрузить новые фотографии">
+                <div class="action-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h4>Загрузить фото</h4>
+                <p>В галерею</p>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Категории | Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Сетка категорий */
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 5px;
+    }
+    
+    /* Карточка категории */
+    .category-card-item {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 16px 14px;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        min-width: 0;
+    }
+    
+    .category-card-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(212, 175, 55, 0.1);
+        border-color: var(--gold);
+    }
+    
+    .category-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1;
+    }
+    
+    .category-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(212, 175, 55, 0.1);
+        color: var(--gold);
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    
+    .category-details {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    .category-details h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .category-details .room-count {
+        font-size: 0.7rem;
+        color: var(--gray);
+        white-space: nowrap;
+    }
+    
+    .category-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
+    
+    .btn-icon-sm {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit-sm {
+        background: transparent;
+        border: 1.5px solid var(--gold);
+        color: var(--gold);
+    }
+    
+    .btn-edit-sm:hover {
+        background: var(--gold);
+        color: var(--primary-dark);
+    }
+    
+    .btn-delete-sm {
+        background: transparent;
+        border: 1.5px solid #dc3545;
+        color: #dc3545;
+    }
+    
+    .btn-delete-sm:hover {
+        background: #dc3545;
+        color: white;
+    }
+    
+    /* Пустое состояние */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+        color: var(--gold);
+        opacity: 0.4;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state h4 {
+        color: var(--gray);
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+    
+    .empty-state p {
+        font-size: 0.85rem;
+    }
+    
+    /* Компактная шапка */
+    .content-card {
+        padding: 18px 20px;
+    }
+    
+    .card-header-actions {
+        margin-bottom: 15px;
+    }
+    
+    .card-header-actions h2 {
+        font-size: 1.2rem;
+    }
+    
+    .btn-success {
+        padding: 8px 18px;
+        font-size: 0.85rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 992px) {
+        .categories-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .categories-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .category-card-item {
+            padding: 14px 12px;
+        }
+        
+        .category-details h4 {
+            font-size: 0.9rem;
+        }
+        
+        .content-card {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div class="card-header-actions">
+        <h2><i class="fas fa-tags"></i> Категории</h2>
+        <a href="{{ url_for('admin_add_category') }}" class="btn btn-success">
+            <i class="fas fa-plus-circle"></i> Добавить
+        </a>
+    </div>
+    
+    {% if categories %}
+    <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card-item">
+            <div class="category-info">
+                <div class="category-icon">
+                    {% if 'люкс' in category.name.lower() %}
+                        <i class="fas fa-crown"></i>
+                    {% elif 'комфорт' in category.name.lower() %}
+                        <i class="fas fa-star"></i>
+                    {% elif 'стандарт' in category.name.lower() %}
+                        <i class="fas fa-home"></i>
+                    {% else %}
+                        <i class="fas fa-tag"></i>
+                    {% endif %}
+                </div>
+                <div class="category-details">
+                    <h4>{{ category.name | e }}</h4>
+                    <span class="room-count">{{ category.rooms|length }} номеров</span>
+                </div>
+            </div>
+            <div class="category-actions">
+                <a href="{{ url_for('admin_edit_category', id=category.id) }}" 
+                   class="btn-icon-sm btn-edit-sm" 
+                   title="Редактировать категорию"
+                   aria-label="Редактировать категорию {{ category.name | e }}">
+                    <i class="fas fa-edit"></i>
+                </a>
+                
+                <!-- ✅ ИСПРАВЛЕННАЯ ФОРМА УДАЛЕНИЯ -->
+                <form method="POST" action="{{ url_for('admin_delete_category', id=category.id) }}" 
+                      style="display: inline-block; margin: 0; padding: 0;"
+                      onsubmit="return confirmDelete('{{ category.name | e }}');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-icon-sm btn-delete-sm" 
+                            title="Удалить категорию"
+                            aria-label="Удалить категорию {{ category.name | e }}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-tags"></i>
+        <h4>Нет категорий</h4>
+        <p class="text-muted">Добавьте первую категорию</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Безопасное подтверждение удаления категории
+     * @param {string} name - Название категории (уже экранировано в шаблоне)
+     * @returns {boolean}
+     */
+    function confirmDelete(name) {
+        if (!name || name.trim() === '') {
+            return confirm('Удалить категорию?');
+        }
+        return confirm('Удалить категорию «' + name + '»?');
+    }
+</script>
+{% endblock %}

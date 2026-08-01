@@ -1,0 +1,700 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Добавить PDF | Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== КАРТОЧКА ФОРМЫ ===== */
+    .form-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 35px;
+        border: 1px solid rgba(11, 59, 59, 0.06);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+    }
+    
+    .form-card:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* ===== ЗАГОЛОВОК ФОРМЫ ===== */
+    .form-header {
+        margin-bottom: 30px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(11, 59, 59, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .form-header h4 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin: 0;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .form-header h4 i {
+        color: var(--gold);
+        font-size: 1.4rem;
+    }
+    
+    .form-header .badge-status {
+        font-size: 0.7rem;
+        padding: 4px 14px;
+        border-radius: 50px;
+        background: rgba(212, 175, 55, 0.08);
+        color: var(--gold);
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+    
+    /* ===== ПОЛЯ ФОРМЫ ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-group:last-of-type {
+        margin-bottom: 28px;
+    }
+    
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        color: var(--primary-dark);
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        margin-bottom: 6px;
+    }
+    
+    .form-label i {
+        color: var(--gold);
+        font-size: 0.9rem;
+        width: 18px;
+        text-align: center;
+    }
+    
+    .form-label .required-star {
+        color: #dc3545;
+        margin-left: 2px;
+    }
+    
+    .form-control {
+        border: 1.5px solid rgba(11, 59, 59, 0.08);
+        border-radius: 10px;
+        padding: 11px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: var(--white);
+        width: 100%;
+        color: var(--primary-dark);
+    }
+    
+    .form-control:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+        outline: none;
+    }
+    
+    .form-control::placeholder {
+        color: var(--gray);
+        font-weight: 400;
+        opacity: 0.6;
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-control.is-invalid:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.08);
+    }
+    
+    .form-text {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.75rem;
+        color: var(--gray);
+        opacity: 0.7;
+    }
+    
+    .form-text i {
+        margin-right: 5px;
+        color: var(--gold);
+    }
+    
+    .form-text-error {
+        color: #dc3545;
+        font-size: 0.75rem;
+        margin-top: 5px;
+        display: none;
+    }
+    
+    /* ===== ФАЙЛОВЫЙ ИНПУТ ===== */
+    .file-upload-wrapper {
+        position: relative;
+    }
+    
+    .file-upload-wrapper .form-control {
+        padding: 9px 14px;
+        cursor: pointer;
+    }
+    
+    .file-upload-wrapper .form-control::-webkit-file-upload-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 7px 18px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-right: 12px;
+    }
+    
+    .file-upload-wrapper .form-control::-webkit-file-upload-button:hover {
+        background: var(--primary-dark);
+    }
+    
+    /* ===== ЧЕКБОКС ===== */
+    .form-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0;
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .form-check-input {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        border: 2px solid rgba(11, 59, 59, 0.15);
+        border-radius: 5px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        position: relative;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--gold);
+        border-color: var(--gold);
+    }
+    
+    .form-check-input:checked::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 11px;
+        color: white;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        border-color: var(--gold);
+    }
+    
+    .form-check-label {
+        font-weight: 500;
+        color: var(--primary-dark);
+        cursor: pointer;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        flex: 1;
+        word-wrap: break-word;
+    }
+    
+    .form-check-label span {
+        display: inline-block;
+        font-weight: 400;
+        color: var(--gray);
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    
+    /* ===== РАЗДЕЛИТЕЛЬ ===== */
+    .form-divider {
+        border: none;
+        border-top: 1px solid rgba(11, 59, 59, 0.06);
+        margin: 24px 0;
+    }
+    
+    /* ===== КНОПКИ ===== */
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 28px;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.25s ease;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+        min-width: 130px;
+        width: auto;
+        flex-shrink: 0;
+    }
+    
+    .btn i {
+        font-size: 0.95rem;
+        transition: transform 0.25s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 1px 3px rgba(11, 59, 59, 0.08);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(11, 59, 59, 0.12);
+        color: white;
+    }
+    
+    .btn-primary:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(11, 59, 59, 0.08);
+    }
+    
+    .btn-primary i {
+        color: var(--gold);
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        color: var(--gray);
+        border: 1.5px solid rgba(11, 59, 59, 0.08);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(11, 59, 59, 0.03);
+        border-color: rgba(11, 59, 59, 0.15);
+        color: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary:active {
+        transform: translateY(0);
+    }
+    
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    /* ===== АДАПТИВНОСТЬ ===== */
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 20px;
+            border-radius: 16px;
+        }
+        
+        .form-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .form-header h4 {
+            font-size: 1.1rem;
+        }
+        
+        .form-actions {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .form-actions .btn {
+            width: auto;
+            flex-shrink: 0;
+            padding: 10px 24px;
+            min-width: 120px;
+        }
+        
+        .form-check {
+            padding-left: 20px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .form-card {
+            padding: 16px;
+            border-radius: 14px;
+        }
+        
+        .form-label {
+            font-size: 0.75rem;
+        }
+        
+        .form-control {
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+        
+        .form-actions {
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .form-actions .btn {
+            padding: 10px 18px;
+            font-size: 0.85rem;
+            min-width: 100px;
+            min-height: 40px;
+        }
+        
+        .btn i {
+            font-size: 0.9rem;
+        }
+        
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .form-check-label {
+            font-size: 0.85rem;
+        }
+        
+        .form-check-label span {
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 1px;
+        }
+    }
+    
+    @media (max-width: 400px) {
+        .form-card {
+            padding: 14px;
+        }
+        
+        .form-header h4 {
+            font-size: 0.95rem;
+        }
+        
+        .form-control {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .form-actions {
+            gap: 6px;
+        }
+        
+        .form-actions .btn {
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            min-width: 80px;
+            min-height: 36px;
+        }
+        
+        .btn i {
+            font-size: 0.8rem;
+        }
+        
+        .form-text {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-lg-8 col-xl-6 mx-auto">
+            <div class="form-card">
+                <div class="form-header">
+                    <h4>
+                        <i class="fas fa-file-pdf"></i> 
+                        Загрузить PDF-документ
+                    </h4>
+                    <span class="badge-status">
+                        <i class="fas fa-plus-circle me-1"></i> Новый
+                    </span>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" novalidate id="documentForm">
+                    <!-- ✅ CSRF-токен -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <!-- Название -->
+                    <div class="form-group">
+                        <label class="form-label" for="title">
+                            <i class="fas fa-tag"></i> 
+                            Название документа
+                            <span class="required-star">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="title" 
+                            id="title" 
+                            class="form-control" 
+                            required 
+                            aria-required="true"
+                            maxlength="200"
+                            autocomplete="off"
+                            placeholder="Например: Свидетельство о классификации"
+                            autofocus
+                        >
+                        <span class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Укажите понятное название для посетителей сайта
+                        </span>
+                        <div class="form-text-error" id="titleError">
+                            <i class="fas fa-exclamation-circle"></i> 
+                            Название содержит недопустимые символы
+                        </div>
+                    </div>
+                    
+                    <!-- Файл -->
+                    <div class="form-group">
+                        <label class="form-label" for="pdf_file">
+                            <i class="fas fa-cloud-upload-alt"></i> 
+                            PDF-файл
+                            <span class="required-star">*</span>
+                        </label>
+                        <div class="file-upload-wrapper">
+                            <input 
+                                type="file" 
+                                name="pdf_file" 
+                                id="pdf_file" 
+                                class="form-control" 
+                                accept=".pdf,application/pdf" 
+                                required
+                                aria-required="true"
+                            >
+                            <span class="form-text" id="fileNameDisplay"></span>
+                        </div>
+                        <span class="form-text">
+                            <i class="fas fa-file-pdf"></i>
+                            Поддерживаются только PDF-файлы, размер до 10 МБ
+                        </span>
+                        <div class="form-text-error" id="fileError">
+                            <i class="fas fa-exclamation-circle"></i> 
+                            Недопустимый файл. Выберите PDF до 10 МБ
+                        </div>
+                    </div>
+                    
+                    <!-- Порядок -->
+                    <div class="form-group">
+                        <label class="form-label" for="order">
+                            <i class="fas fa-sort-numeric-down"></i> 
+                            Порядок отображения
+                        </label>
+                        <input 
+                            type="number" 
+                            name="order" 
+                            id="order" 
+                            class="form-control" 
+                            value="0" 
+                            min="0"
+                            autocomplete="off"
+                        >
+                        <span class="form-text">
+                            <i class="fas fa-arrow-up"></i>
+                            Меньшее число — выше в списке документов
+                        </span>
+                    </div>
+                    
+                    <!-- Публикация -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input 
+                                type="checkbox" 
+                                name="is_published" 
+                                id="published" 
+                                class="form-check-input" 
+                                value="1" 
+                                checked
+                            >
+                            <label class="form-check-label" for="published">
+                                Опубликован
+                                <span>(показывать на сайте)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <hr class="form-divider">
+                    
+                    <!-- Кнопки -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-upload"></i> Загрузить
+                        </button>
+                        <a href="{{ url_for('admin_documents') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        'use strict';
+        
+        const form = document.getElementById('documentForm');
+        const titleInput = document.getElementById('title');
+        const fileInput = document.getElementById('pdf_file');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const submitBtn = document.getElementById('submitBtn');
+        const titleError = document.getElementById('titleError');
+        const fileError = document.getElementById('fileError');
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+        
+        // === ВАЛИДАЦИЯ НАЗВАНИЯ ===
+        function validateTitle() {
+            const value = titleInput.value.trim();
+            
+            // Проверка на специальные символы
+            if (/[<>\"\'{}()\[\]]/.test(value)) {
+                titleInput.classList.add('is-invalid');
+                titleError.style.display = 'block';
+                return false;
+            }
+            
+            // Проверка на минимальную длину
+            if (value.length < 2) {
+                titleInput.classList.add('is-invalid');
+                titleError.style.display = 'block';
+                titleError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Название должно содержать минимум 2 символа';
+                return false;
+            }
+            
+            titleInput.classList.remove('is-invalid');
+            titleError.style.display = 'none';
+            return true;
+        }
+        
+        titleInput.addEventListener('input', validateTitle);
+        titleInput.addEventListener('blur', validateTitle);
+        
+        // === ВАЛИДАЦИЯ ФАЙЛА ===
+        function validateFile() {
+            if (fileInput.files.length === 0) {
+                fileInput.classList.add('is-invalid');
+                fileError.style.display = 'block';
+                fileError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Выберите PDF-файл';
+                return false;
+            }
+            
+            const file = fileInput.files[0];
+            const fileName = file.name;
+            const fileSize = file.size;
+            
+            // Проверка расширения
+            if (!fileName.toLowerCase().endsWith('.pdf')) {
+                fileInput.classList.add('is-invalid');
+                fileError.style.display = 'block';
+                fileError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Файл должен быть в формате PDF';
+                return false;
+            }
+            
+            // Проверка размера
+            if (fileSize > MAX_FILE_SIZE) {
+                fileInput.classList.add('is-invalid');
+                fileError.style.display = 'block';
+                fileError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Файл слишком большой! Максимум 10 МБ';
+                return false;
+            }
+            
+            fileInput.classList.remove('is-invalid');
+            fileError.style.display = 'none';
+            return true;
+        }
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                // Экранируем имя файла для безопасности
+                const safeName = file.name.replace(/[<>\"']/g, '');
+                fileNameDisplay.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: #2E7D32;"></i> 
+                    Выбран файл: <strong>${safeName}</strong> (${sizeMB} МБ)
+                `;
+                fileNameDisplay.style.color = '#2E7D32';
+                validateFile();
+            } else {
+                fileNameDisplay.innerHTML = '';
+                fileInput.classList.remove('is-invalid');
+                fileError.style.display = 'none';
+            }
+        });
+        
+        // === ОТПРАВКА ФОРМЫ ===
+        form.addEventListener('submit', function(event) {
+            // Проверяем все поля
+            const isTitleValid = validateTitle();
+            const isFileValid = validateFile();
+            
+            if (!isTitleValid || !isFileValid) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Фокусируемся на первом поле с ошибкой
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+            
+            // Блокируем кнопку для предотвращения двойной отправки
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Загрузка...';
+        });
+        
+        // === УБИРАЕМ ПОДСВЕТКУ ОШИБОК ПРИ ВВОДЕ ===
+        document.querySelectorAll('.form-control').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                const errorEl = this.parentElement.querySelector('.form-text-error');
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                }
+            });
+        });
+    })();
+</script>
+{% endblock %}
