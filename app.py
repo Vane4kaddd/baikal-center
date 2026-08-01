@@ -233,7 +233,10 @@ def save_photo(file, folder='gallery', max_size=(1200, 800), quality=85):
     with open(filepath, 'wb') as f:
         f.write(buffer.getvalue())
     
-    return f"/static/uploads/{folder}/{os.path.basename(filepath)}"
+    if "AMVERA" in os.environ:
+        return f"/uploads/{folder}/{os.path.basename(filepath)}"
+    else:
+        return f"/static/uploads/{folder}/{os.path.basename(filepath)}"
 
 
 def admin_required(f):
