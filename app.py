@@ -526,7 +526,7 @@ def admin_add_gallery_photo():
     return render_template('admin/add_gallery_photo.html')
 
 
-@app.route('/admin/gallery/<int:id>/delete')
+@app.route('/admin/gallery/<int:id>/delete', methods=['GET', 'POST'])
 @admin_required
 def admin_delete_gallery_photo(id):
     update_last_activity()
