@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from flask_wtf.csrf import generate_csrf
 from flask import send_from_directory
 
+
 # Загружаем переменные из .env файла
 load_dotenv()
 
@@ -908,13 +909,23 @@ def admin_add_document():
         
         safe_name = secure_filename(file.filename)
         filename = f"doc_{uuid.uuid4().hex}.pdf"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'documents', filename)
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        # ✅ ИЗМЕНЕНО: путь для Amvera
+        if "AMVERA" in os.environ:
+            documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
+            os.makedirs(documents_path, exist_ok=True)
+            filepath = os.path.join(documents_path, filename)
+            file_path_db = f"/uploads/documents/{filename}"
+        else:
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'documents', filename)
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            file_path_db = f"/static/uploads/documents/{filename}"
+        
         file.save(filepath)
         
         document = Document(
             title=title,
-            file_path=f"/static/uploads/documents/{filename}",
+            file_path=file_path_db,
             is_published=request.form.get('is_published') == '1',
             order=int(request.form.get('order', 0))
         )
@@ -927,21 +938,30 @@ def admin_add_document():
     return render_template('admin/add_document.html')
 
 
-@app.route('/admin/documents/<int:id>/delete', methods=['GET', 'POST'])
+@app.route('/admin/documents/<int:id>/delete')
 @admin_required
 def admin_delete_document(id):
     update_last_activity()
     document = Document.query.get_or_404(id)
     
-    # Безопасное удаление файла
-    if document.file_path.startswith('/static/uploads/documents/'):
-        try:
-            relative_path = document.file_path.replace('/static/uploads/', '').lstrip('/')
-            safe_path = secure_filepath(os.path.join(app.config['UPLOAD_FOLDER']), relative_path)
-            if os.path.exists(safe_path):
-                os.remove(safe_path)
-        except (ValueError, OSError) as e:
-            logger.error(f"Ошибка удаления PDF: {e}")
+    # ✅ ИЗМЕНЕНО: удаление файла для обоих путей
+    if "AMVERA" in os.environ:
+        # На Amvera файлы в ~/data/uploads/documents/
+        file_path = document.file_path.replace('/uploads/documents/', '')
+        documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
+        safe_path = os.path.join(documents_path, file_path)
+        if os.path.exists(safe_path):
+            os.remove(safe_path)
+    else:
+        # Локально файлы в static/uploads/documents/
+        if document.file_path.startswith('/static/uploads/documents/'):
+            try:
+                relative_path = document.file_path.replace('/static/uploads/', '').lstrip('/')
+                safe_path = secure_filepath(os.path.join(app.config['UPLOAD_FOLDER']), relative_path)
+                if os.path.exists(safe_path):
+                    os.remove(safe_path)
+            except (ValueError, OSError) as e:
+                logger.error(f"Ошибка удаления PDF: {e}")
     
     db.session.delete(document)
     db.session.commit()
@@ -949,7 +969,13 @@ def admin_delete_document(id):
     flash('Документ удалён!', 'success')
     return redirect(url_for('admin_documents'))
 
-
+@app.route('/uploads/documents/<path:filename>')
+def uploaded_document(filename):
+    if "AMVERA" in os.environ:
+        documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
+    else:
+        documents_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents')
+    return send_from_directory(documents_path, filename)
 # ============== ПУБЛИЧНЫЕ МАРШРУТЫ ==============
 
 @app.route('/')
