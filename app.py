@@ -553,7 +553,7 @@ def admin_delete_gallery_photo(id):
     return redirect(url_for('admin_gallery'))
 
 
-@app.route('/admin/gallery/<int:id>/move/<direction>')
+@app.route('/admin/gallery/<int:id>/move/<direction>', methods=['GET', 'POST'])
 @admin_required
 def admin_move_gallery_photo(id, direction):
     update_last_activity()
