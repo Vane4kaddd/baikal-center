@@ -1,4 +1,4 @@
-# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order
+# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order + PostgreSQL
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -23,11 +23,42 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# ============================================================
+# 🚀 НАСТРОЙКИ ДЛЯ AMVERA (ПОСТОЯННОЕ ХРАНИЛИЩЕ)
+# ============================================================
+if "AMVERA" in os.environ:
+    # На Amvera используем PostgreSQL
+    INSTANCE_PATH = "/data/instance"
+    UPLOAD_PATH = "/data/uploads"
+    
+    # PostgreSQL подключение
+    DB_USER = os.environ.get('DB_USER', 'postgres')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_PORT = os.environ.get('DB_PORT', '5432')
+    DB_NAME = os.environ.get('DB_NAME', 'baikal')
+    
+    SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+else:
+    # Локальная разработка — SQLite
+    INSTANCE_PATH = "instance"
+    UPLOAD_PATH = "static/uploads"
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///baikal.db')
+
+# Создаём папки
+os.makedirs(INSTANCE_PATH, exist_ok=True)
+os.makedirs(UPLOAD_PATH, exist_ok=True)
+os.makedirs(os.path.join(UPLOAD_PATH, 'gallery'), exist_ok=True)
+os.makedirs(os.path.join(UPLOAD_PATH, 'rooms'), exist_ok=True)
+os.makedirs(os.path.join(UPLOAD_PATH, 'documents'), exist_ok=True)
+
+# ============================================================
 # БЕЗОПАСНАЯ КОНФИГУРАЦИЯ
+# ============================================================
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///baikal.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'static/uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_PATH
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32 MB
 app.config['MAX_PHOTOS'] = 20
 app.config['MAX_PDF_SIZE'] = 10 * 1024 * 1024  # 10 MB
@@ -64,11 +95,6 @@ if not os.environ.get('SECRET_KEY'):
 ADMIN_PASSWORD_HASH = generate_password_hash(
     os.environ.get('ADMIN_PASSWORD', 'adm1n1214')
 )
-
-# Создаём папки для загрузок
-os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'rooms'), exist_ok=True)
-os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'gallery'), exist_ok=True)
-os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'documents'), exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -263,7 +289,7 @@ class Room(db.Model):
     # ✅ ДОБАВЛЕНО: поле для ручной сортировки
     order = db.Column(db.Integer, default=0)
 
-    category = db.relationship('RoomCategory', backref='room_list')
+    category = db.relationship('RoomCategory', backref='room_list', overlaps="category_ref,rooms")
 
     def __init__(self, *args, **kwargs):
         super(Room, self).__init__(*args, **kwargs)
