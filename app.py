@@ -1034,6 +1034,40 @@ def inject_models():
         'csrf_token': generate_csrf
     }
 
+@app.route('/sitemap.xml')
+def sitemap():
+    # Получить все номера
+    rooms = Room.query.filter_by(is_available=True).all()
+    
+    # Базовые страницы
+    pages = [
+        {'loc': '/', 'priority': '1.0'},
+        {'loc': '/rooms', 'priority': '0.9'},
+    ]
+    
+    # Добавить номера
+    for room in rooms:
+        pages.append({
+            'loc': f'/room/{room.slug}',
+            'priority': '0.8'
+        })
+    
+    # Сгенерировать XML
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    
+    today = datetime.now().date().isoformat()
+    for page in pages:
+        xml += '    <url>\n'
+        xml += f'        <loc>https://center-baikal.ru{page["loc"]}</loc>\n'
+        xml += f'        <lastmod>{today}</lastmod>\n'
+        xml += f'        <changefreq>weekly</changefreq>\n'
+        xml += f'        <priority>{page["priority"]}</priority>\n'
+        xml += '    </url>\n'
+    
+    xml += '</urlset>'
+    return xml, 200, {'Content-Type': 'application/xml'}
+
 # ============== ЗАПУСК ==============
 
 if __name__ == '__main__':
