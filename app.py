@@ -27,18 +27,27 @@ app = Flask(__name__)
 # ============================================================
 # 🚀 НАСТРОЙКИ ДЛЯ AMVERA (ПОСТОЯННОЕ ХРАНИЛИЩЕ)
 # ============================================================
+import sys
+print(f"--- ДИАГНОСТИКА ---")
+print(f"Значение AMVERA: {os.environ.get('AMVERA')}")
+print(f"Значение DB_HOST: {os.environ.get('DB_HOST')}")
+print(f"Все переменные (первые 5): {list(os.environ.keys())[:5]}")
+print(f"--- КОНЕЦ ДИАГНОСТИКИ ---")
 if "AMVERA" in os.environ:
     # На Amvera используем PostgreSQL
     INSTANCE_PATH = os.path.join(os.path.expanduser("~"), "data", "instance")
     UPLOAD_PATH = os.path.join(os.path.expanduser("~"), "data", "uploads")
     
     # PostgreSQL подключение
-    DB_USER = os.environ.get('DB_USER', 'postgres')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
-    DB_HOST = os.environ.get('DB_HOST', 'localhost')
-    DB_PORT = os.environ.get('DB_PORT', '5432')
-    DB_NAME = os.environ.get('DB_NAME', 'baikal')
-    
+    DB_USER = os.environ.get('DB_USER', 'postgres').strip()
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', '').strip()
+    DB_HOST = os.environ.get('DB_HOST', 'localhost').strip()
+    DB_PORT = os.environ.get('DB_PORT', '5432').strip()
+    DB_NAME = os.environ.get('DB_NAME', 'baikal').strip()
+    # ДОБАВИТЬ ЭТУ ДИАГНОСТИКУ:
+    print(f"ИМЯ БАЗЫ (КАК ЕЁ ВИДИТ PYTHON): '{DB_NAME}'")
+    # ------------------------------------------
+
     SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 else:
     # Локальная разработка — SQLite
@@ -73,7 +82,9 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 # Секретный ключ для доступа к админ-панели (храните в .env)
 ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'my-super-secret-key-2026')
 ADMIN_PATH = os.environ.get('ADMIN_PATH', '/control-panel')
-
+# ✅ ДОБАВЬТЕ ЭТУ ДИАГНОСТИКУ
+print(f"ADMIN_PATH: {ADMIN_PATH}")
+print(f"ADMIN_SECRET_KEY (первые 5 символов): {ADMIN_SECRET_KEY[:5]}...")
 # ⚡ КЛЮЧЕВОЕ: автоматическое определение протокола
 @app.before_request
 def set_secure_cookie():
