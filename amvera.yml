@@ -7,7 +7,9 @@ build:
   buildCommand: pip install -r requirements.txt
 
 run:
-  command: gunicorn --bind 0.0.0.0:5000 app:app
+  command: |
+    python fix_paths.py
+    gunicorn --bind 0.0.0.0:5000 app:app
   containerPort: 5000
   persistentPaths:
     - /data
