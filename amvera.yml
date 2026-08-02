@@ -7,8 +7,7 @@ build:
   buildCommand: pip install -r requirements.txt
 
 run:
-  command: |
-    mkdir -p static && ln -sf ~/data/uploads ~/project/static/uploads && gunicorn --bind 0.0.0.0:5000 app:app
+  command: gunicorn --bind 0.0.0.0:5000 app:app
   containerPort: 5000
   persistentPaths:
     - /data
