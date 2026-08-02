@@ -2,7 +2,24 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.expanduser("~"), "data", "instance", "baikal.db")
+# Пробуем разные возможные пути
+possible_paths = [
+    "/data/instance/baikal.db",
+    os.path.join(os.path.expanduser("~"), "data", "instance", "baikal.db"),
+    os.path.join(os.path.expanduser("~"), "project", "instance", "baikal.db"),
+    "instance/baikal.db"
+]
+
+DB_PATH = None
+for path in possible_paths:
+    if os.path.exists(path):
+        DB_PATH = path
+        print(f"✅ База найдена: {DB_PATH}")
+        break
+
+if DB_PATH is None:
+    print("❌ База данных не найдена!")
+    exit(1)
 
 def fix_paths():
     try:
