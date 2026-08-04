@@ -576,11 +576,6 @@ def admin_move_gallery_photo(id, direction):
     db.session.commit()
 
     return redirect(url_for('admin_gallery'))
-
-
-@app.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_PATH, filename)
     
 # ============== УПРАВЛЕНИЕ НОМЕРАМИ ==============
 
@@ -1067,7 +1062,10 @@ def sitemap():
     
     xml += '</urlset>'
     return xml, 200, {'Content-Type': 'application/xml'}
-
+    
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_PATH, filename)
 # ============== ЗАПУСК ==============
 
 if __name__ == '__main__':
