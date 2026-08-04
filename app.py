@@ -36,8 +36,8 @@ print(f"Все переменные (первые 5): {list(os.environ.keys())[:
 print(f"--- КОНЕЦ ДИАГНОСТИКИ ---")
 if "AMVERA" in os.environ:
     # На Amvera используем PostgreSQL
-    INSTANCE_PATH = "/data/instance")
-    UPLOAD_PATH = "/data/uploads")
+    INSTANCE_PATH = "/data/instance"
+    UPLOAD_PATH = "/data/uploads"
     
     # PostgreSQL подключение
     DB_USER = os.environ.get('DB_USER', 'postgres').strip()
