@@ -240,7 +240,6 @@ def save_photo(file, folder='gallery', max_size=(1200, 800), quality=85):
     else:
         return f"/static/uploads/{folder}/{os.path.basename(filepath)}"
 
-
 def admin_required(f):
     """Декоратор для защиты админ-маршрутов с проверкой сессии"""
     @wraps(f)
