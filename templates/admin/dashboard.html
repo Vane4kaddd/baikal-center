@@ -277,6 +277,104 @@
             margin-top: 10px !important;
         }
     }
+    /* ===== ВИДЖЕТЫ СТАТИСТИКИ ПОСЕЩЕНИЙ ===== */
+.stats-widgets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.stats-widget {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 20px 18px;
+    border: 1px solid rgba(212, 175, 55, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stats-widget:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border-color: rgba(212, 175, 55, 0.2);
+}
+
+.stats-widget .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.stats-widget .icon.gold {
+    background: rgba(212, 175, 55, 0.12);
+    color: var(--gold);
+}
+
+.stats-widget .icon.green {
+    background: rgba(46, 125, 50, 0.12);
+    color: #2E7D32;
+}
+
+.stats-widget .icon.blue {
+    background: rgba(33, 150, 243, 0.12);
+    color: #2196F3;
+}
+
+.stats-widget .icon.purple {
+    background: rgba(156, 39, 176, 0.12);
+    color: #9C27B0;
+}
+
+.stats-widget .info {
+    flex: 1;
+}
+
+.stats-widget .info .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+.stats-widget .info .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.stats-widget .info .sub {
+    font-size: 0.7rem;
+    color: var(--gray);
+    margin-top: 2px;
+    opacity: 0.7;
+}
+
+.stats-widget .info .sub i {
+    margin-right: 4px;
+}
+
+@media (max-width: 992px) {
+    .stats-widgets {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-widgets {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 {% endblock %}
 
@@ -289,7 +387,75 @@
         {{ now.strftime('%d %B %Y') | e if now else 'Сегодня' }}
     </div>
 </div>
-
+<!-- ===== ВИДЖЕТЫ ПОСЕЩЕНИЙ ===== -->
+<div class="stats-widgets" data-aos="fade-up">
+    <!-- Всего посещений -->
+    <div class="stats-widget">
+        <div class="icon gold">
+            <i class="fas fa-eye"></i>
+        </div>
+        <div class="info">
+            <div class="value">{{ total_visits }}</div>
+            <div class="label">Всего посещений</div>
+        </div>
+    </div>
+    
+    <!-- Сегодня -->
+    <div class="stats-widget">
+        <div class="icon green">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="info">
+            <div class="value">{{ today_visits }}</div>
+            <div class="label">Сегодня</div>
+            <div class="sub"><i class="fas fa-arrow-up" style="color: #2E7D32;"></i> +{{ today_visits if today_visits > 0 else 0 }} сегодня</div>
+        </div>
+    </div>
+    
+    <!-- Вчера -->
+    <div class="stats-widget">
+        <div class="icon blue">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="info">
+            <div class="value">{{ yesterday_visits }}</div>
+            <div class="label">Вчера</div>
+            <div class="sub">
+                {% if yesterday_visits > 0 %}
+                    <i class="fas fa-arrow-{{ 'up' if today_visits > yesterday_visits else 'down' }}" 
+                       style="color: {{ '#2E7D32' if today_visits > yesterday_visits else '#dc3545' }};">
+                    </i>
+                    {% if today_visits > yesterday_visits %}
+                        +{{ today_visits - yesterday_visits }}
+                    {% else %}
+                        {{ yesterday_visits - today_visits }}
+                    {% endif %}
+                    за день
+                {% else %}
+                    <i class="fas fa-minus" style="color: var(--gray);"></i> нет данных
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Среднее за день -->
+    <div class="stats-widget">
+        <div class="icon purple">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="info">
+            <div class="value">
+                {% if total_visits > 0 %}
+                    {{ (total_visits / (now.strftime('%j')|int))|round(1) }}
+                {% else %}
+                    0
+                {% endif %}
+            </div>
+            <div class="label">В среднем в день</div>
+            <div class="sub"><i class="fas fa-calendar-alt"></i> за весь период</div>
+        </div>
+    </div>
+</div>
 <div class="stat-grid">
     <a href="{{ url_for('admin_rooms') }}" class="stat-card stat-rooms" 
        aria-label="Перейти к управлению номерами">
