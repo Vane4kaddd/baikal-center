@@ -1,4 +1,4 @@
-# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order + PostgreSQL + Счётчик посещений
+# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order + PostgreSQL + Счётчик уникальных посетителей
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -45,9 +45,7 @@ if "AMVERA" in os.environ:
     DB_HOST = os.environ.get('DB_HOST', 'localhost').strip()
     DB_PORT = os.environ.get('DB_PORT', '5432').strip()
     DB_NAME = os.environ.get('DB_NAME', 'baikal').strip()
-    # ДОБАВИТЬ ЭТУ ДИАГНОСТИКУ:
     print(f"ИМЯ БАЗЫ (КАК ЕЁ ВИДИТ PYTHON): '{DB_NAME}'")
-    # ------------------------------------------
 
     SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 else:
@@ -83,9 +81,9 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 # Секретный ключ для доступа к админ-панели (храните в .env)
 ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'my-super-secret-key-2026')
 ADMIN_PATH = os.environ.get('ADMIN_PATH', '/control-panel')
-# ✅ ДОБАВЬТЕ ЭТУ ДИАГНОСТИКУ
 print(f"ADMIN_PATH: {ADMIN_PATH}")
 print(f"ADMIN_SECRET_KEY (первые 5 символов): {ADMIN_SECRET_KEY[:5]}...")
+
 # ⚡ КЛЮЧЕВОЕ: автоматическое определение протокола
 @app.before_request
 def set_secure_cookie():
@@ -112,33 +110,58 @@ ADMIN_PASSWORD_HASH = generate_password_hash(
 db = SQLAlchemy(app)
 
 
-# ✅ НОВЫЙ БЛОК: СЧЁТЧИК ПОСЕЩЕНИЙ
+# ✅ СЧЁТЧИК УНИКАЛЬНЫХ ПОСЕТИТЕЛЕЙ ПО IP
 @app.before_request
 def update_stats():
-    """Обновляет счетчик посещений при каждом запросе"""
+    """Обновляет счетчик уникальных посетителей по IP"""
     # Игнорируем запросы к админке, статике и загрузкам
     if request.path.startswith('/admin') or request.path.startswith('/static') or request.path.startswith('/uploads'):
         return
     
+    # Получаем IP пользователя
+    ip = request.remote_addr
+    # Если сайт за прокси — используйте X-Forwarded-For
+    # ip = request.headers.get('X-Forwarded-For', ip).split(',')[0].strip()
+    
+    today = datetime.now(timezone.utc).date()
+    
     with app.app_context():
         stats = SiteStats.query.first()
-        today = datetime.now(timezone.utc).date()
-        
-        if stats:
-            # Если наступил новый день — переносим данные
-            if stats.last_updated != today:
-                stats.yesterday_visits = stats.today_visits
-                stats.today_visits = 0
-                stats.last_updated = today
-            stats.total_visits += 1
-            stats.today_visits += 1
-        else:
-            # Первое посещение
-            stats = SiteStats(total_visits=1, today_visits=1, last_updated=today)
+        if not stats:
+            stats = SiteStats(
+                total_visits=0, today_visits=0, yesterday_visits=0,
+                total_unique=0, today_unique=0, yesterday_unique=0,
+                last_updated=today
+            )
             db.session.add(stats)
+            db.session.commit()
+        
+        # Если новый день — обновляем статистику
+        if stats.last_updated != today:
+            stats.yesterday_visits = stats.today_visits
+            stats.yesterday_unique = stats.today_unique
+            stats.today_visits = 0
+            stats.today_unique = 0
+            stats.last_updated = today
+        
+        # Увеличиваем общий счётчик запросов
+        stats.total_visits += 1
+        stats.today_visits += 1
+        
+        # Проверяем, был ли этот IP уже сегодня
+        visitor = VisitorStat.query.filter_by(ip=ip, visit_date=today).first()
+        
+        if visitor:
+            # Уже был сегодня — обновляем время
+            visitor.last_visit = datetime.now(timezone.utc)
+        else:
+            # Новый уникальный посетитель
+            new_visitor = VisitorStat(ip=ip, visit_date=today)
+            db.session.add(new_visitor)
+            stats.total_unique += 1
+            stats.today_unique += 1
         
         db.session.commit()
-# ✅ КОНЕЦ НОВОГО БЛОКА
 
 
 @app.template_filter('pluralize')
@@ -437,11 +460,28 @@ class SiteStats(db.Model):
     total_visits = db.Column(db.Integer, default=0)
     today_visits = db.Column(db.Integer, default=0)
     yesterday_visits = db.Column(db.Integer, default=0)
+    total_unique = db.Column(db.Integer, default=0)      # Всего уникальных посетителей
+    today_unique = db.Column(db.Integer, default=0)      # Уникальных сегодня
+    yesterday_unique = db.Column(db.Integer, default=0)  # Уникальных вчера
     last_updated = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
     
     def __repr__(self):
-        return f"Статистика: всего {self.total_visits}, сегодня {self.today_visits}"
-# ✅ КОНЕЦ НОВОЙ МОДЕЛИ
+        return f"Статистика: всего {self.total_visits}, сегодня {self.today_visits}, уникальных {self.total_unique}"
+
+
+# ✅ НОВАЯ МОДЕЛЬ: УНИКАЛЬНЫЕ ПОСЕТИТЕЛИ ПО IP
+class VisitorStat(db.Model):
+    """Статистика уникальных посетителей по IP"""
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(45), nullable=False)
+    visit_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    first_visit = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    last_visit = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    __table_args__ = (db.UniqueConstraint('ip', 'visit_date', name='unique_ip_day'),)
+    
+    def __repr__(self):
+        return f"Visitor {self.ip} on {self.visit_date}"
 
 
 # ============== АДМИН-ПАНЕЛЬ ==============
@@ -472,17 +512,22 @@ def admin_index():
     gallery_count = GalleryPhoto.query.count()
     documents_count = Document.query.count()
     
-    # ✅ НОВЫЙ БЛОК: ПОЛУЧАЕМ СТАТИСТИКУ
+    # Получаем статистику
     stats = SiteStats.query.first()
     if stats:
         total_visits = stats.total_visits
         today_visits = stats.today_visits
         yesterday_visits = stats.yesterday_visits
+        total_unique = stats.total_unique
+        today_unique = stats.today_unique
+        yesterday_unique = stats.yesterday_unique
     else:
         total_visits = 0
         today_visits = 0
         yesterday_visits = 0
-    # ✅ КОНЕЦ НОВОГО БЛОКА
+        total_unique = 0
+        today_unique = 0
+        yesterday_unique = 0
     
     return render_template('admin/dashboard.html',
                            rooms_count=rooms_count,
@@ -493,6 +538,9 @@ def admin_index():
                            total_visits=total_visits,
                            today_visits=today_visits,
                            yesterday_visits=yesterday_visits,
+                           total_unique=total_unique,
+                           today_unique=today_unique,
+                           yesterday_unique=yesterday_unique,
                            now=datetime.now(timezone.utc))
 
 
@@ -650,7 +698,6 @@ def admin_rooms():
         selected_category = category_id
         query = query.filter_by(category_id=category_id)
     
-    # ✅ ИЗМЕНЕНО: сортировка по полю order, затем по дате создания
     rooms = query.order_by(Room.order.asc(), Room.created_at.desc()).all()
     
     categories = RoomCategory.query.all()
@@ -664,8 +711,6 @@ def admin_rooms():
 def admin_add_room():
     update_last_activity()
     categories = RoomCategory.query.all()
-    
-    # ✅ ДОБАВЛЕНО: количество номеров для подсказки в форме
     rooms_count = Room.query.count()
     
     if request.method == 'POST':
@@ -680,7 +725,6 @@ def admin_add_room():
             flash('Некорректная цена или вместимость!', 'danger')
             return render_template('admin/add_room.html', categories=categories, rooms_count=rooms_count)
 
-        # ✅ ДОБАВЛЕНО: получение значения order из формы
         try:
             order = int(request.form.get('order', 0))
         except (ValueError, TypeError):
@@ -693,7 +737,7 @@ def admin_add_room():
             price=price,
             capacity=capacity,
             is_available=request.form.get('is_available') == '1',
-            order=order  # ✅ ДОБАВЛЕНО
+            order=order
         )
         db.session.add(room)
         db.session.flush()
@@ -740,7 +784,6 @@ def admin_edit_room(id):
             flash('Некорректная цена или вместимость!', 'danger')
             return render_template('admin/edit_room.html', room=room, categories=categories)
         
-        # ✅ ДОБАВЛЕНО: получение значения order из формы
         try:
             room.order = int(request.form.get('order', 0))
         except (ValueError, TypeError):
@@ -964,7 +1007,6 @@ def admin_add_document():
         safe_name = secure_filename(file.filename)
         filename = f"doc_{uuid.uuid4().hex}.pdf"
         
-        # ✅ ИЗМЕНЕНО: путь для Amvera
         if "AMVERA" in os.environ:
             documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
             os.makedirs(documents_path, exist_ok=True)
@@ -998,16 +1040,13 @@ def admin_delete_document(id):
     update_last_activity()
     document = Document.query.get_or_404(id)
     
-    # ✅ ИЗМЕНЕНО: удаление файла для обоих путей
     if "AMVERA" in os.environ:
-        # На Amvera файлы в ~/data/uploads/documents/
         file_path = document.file_path.replace('/uploads/documents/', '')
         documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
         safe_path = os.path.join(documents_path, file_path)
         if os.path.exists(safe_path):
             os.remove(safe_path)
     else:
-        # Локально файлы в static/uploads/documents/
         if document.file_path.startswith('/static/uploads/documents/'):
             try:
                 relative_path = document.file_path.replace('/static/uploads/', '').lstrip('/')
@@ -1030,6 +1069,7 @@ def uploaded_document(filename):
     else:
         documents_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents')
     return send_from_directory(documents_path, filename)
+
 # ============== ПУБЛИЧНЫЕ МАРШРУТЫ ==============
 
 @app.route('/')
@@ -1057,7 +1097,6 @@ def room_list():
         if selected_category:
             query = query.filter_by(category_id=selected_category.id)
     
-    # ✅ ИЗМЕНЕНО: сортировка по полю order, затем по цене
     rooms = query.order_by(Room.order.asc(), Room.price.asc()).all()
     
     categories = RoomCategory.query.all()
@@ -1081,7 +1120,7 @@ def room_detail(slug):
 
 @app.context_processor
 def inject_models():
-    """Делает модели доступными во всех шаблонах"""
+    """Делает моде��и доступными во всех шаблонах"""
     return {
         'Document': Document,
         'datetime': datetime,
@@ -1090,23 +1129,19 @@ def inject_models():
 
 @app.route('/sitemap.xml')
 def sitemap():
-    # Получить все номера
     rooms = Room.query.filter_by(is_available=True).all()
     
-    # Базовые страницы
     pages = [
         {'loc': '/', 'priority': '1.0'},
         {'loc': '/rooms', 'priority': '0.9'},
     ]
     
-    # Добавить номера
     for room in rooms:
         pages.append({
             'loc': f'/room/{room.slug}',
             'priority': '0.8'
         })
     
-    # Сгенерировать XML
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     
@@ -1125,6 +1160,7 @@ def sitemap():
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_PATH, filename)
+
 # ============== ЗАПУСК ==============
 
 if __name__ == '__main__':
