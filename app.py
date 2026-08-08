@@ -110,221 +110,6 @@ ADMIN_PASSWORD_HASH = generate_password_hash(
 db = SQLAlchemy(app)
 
 
-# ✅ СЧЁТЧИК УНИКАЛЬНЫХ ПОСЕТИТЕЛЕЙ ПО IP
-@app.before_request
-def update_stats():
-    """Обновляет счетчик уникальных посетителей по IP"""
-    # Игнорируем запросы к админке, статике и загрузкам
-    if request.path.startswith('/admin') or request.path.startswith('/static') or request.path.startswith('/uploads'):
-        return
-    
-    # Получаем IP пользователя
-    ip = request.remote_addr
-    # Если сайт за прокси — используйте X-Forwarded-For
-    # ip = request.headers.get('X-Forwarded-For', ip).split(',')[0].strip()
-    
-    today = datetime.now(timezone.utc).date()
-    
-    with app.app_context():
-        stats = SiteStats.query.first()
-        if not stats:
-            stats = SiteStats(
-                total_visits=0, today_visits=0, yesterday_visits=0,
-                total_unique=0, today_unique=0, yesterday_unique=0,
-                last_updated=today
-            )
-            db.session.add(stats)
-            db.session.commit()
-        
-        # Если новый день — обновляем статистику
-        if stats.last_updated != today:
-            stats.yesterday_visits = stats.today_visits
-            stats.yesterday_unique = stats.today_unique
-            stats.today_visits = 0
-            stats.today_unique = 0
-            stats.last_updated = today
-        
-        # Увеличиваем общий счётчик запросов
-        stats.total_visits += 1
-        stats.today_visits += 1
-        
-        # Проверяем, был ли этот IP уже сегодня
-        visitor = VisitorStat.query.filter_by(ip=ip, visit_date=today).first()
-        
-        if visitor:
-            # Уже был сегодня — обновляем время
-            visitor.last_visit = datetime.now(timezone.utc)
-        else:
-            # Новый уникальный посетитель
-            new_visitor = VisitorStat(ip=ip, visit_date=today)
-            db.session.add(new_visitor)
-            stats.total_unique += 1
-            stats.today_unique += 1
-        
-        db.session.commit()
-
-
-@app.template_filter('pluralize')
-def pluralize(count, one, few, many):
-    """
-    Универсальное склонение слов для русского языка
-    
-    Аргументы:
-        count (int): число
-        one (str): форма для 1 (например, 'гость')
-        few (str): форма для 2-4 (например, 'гостя')
-        many (str): форма для 5-20 (например, 'гостей')
-    
-    Пример:
-        {{ 1 | pluralize('гость', 'гостя', 'гостей') }} → 1 гость
-        {{ 2 | pluralize('гость', 'гостя', 'гостей') }} → 2 гостя
-        {{ 5 | pluralize('гость', 'гостя', 'гостей') }} → 5 гостей
-    """
-    if count % 100 in (11, 12, 13, 14):
-        return f"{count} {many}"
-    
-    last_digit = count % 10
-    if last_digit == 1:
-        return f"{count} {one}"
-    elif last_digit in (2, 3, 4):
-        return f"{count} {few}"
-    else:
-        return f"{count} {many}"
-
-# ============== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==============
-
-def transliterate(text):
-    """Транслитерация русского текста в латиницу"""
-    if not text:
-        return ''
-    text = text.lower()
-    replacements = [
-        ('а', 'a'), ('б', 'b'), ('в', 'v'), ('г', 'g'), ('д', 'd'), ('е', 'e'), ('ё', 'yo'),
-        ('ж', 'zh'), ('з', 'z'), ('и', 'i'), ('й', 'y'), ('к', 'k'), ('л', 'l'), ('м', 'm'),
-        ('н', 'n'), ('о', 'o'), ('п', 'p'), ('р', 'r'), ('с', 's'), ('т', 't'), ('у', 'u'),
-        ('ф', 'f'), ('х', 'h'), ('ц', 'ts'), ('ч', 'ch'), ('ш', 'sh'), ('щ', 'sch'),
-        ('ъ', ''), ('ы', 'y'), ('ь', ''), ('э', 'e'), ('ю', 'yu'), ('я', 'ya'),
-        (' ', '-'), ('_', '-')
-    ]
-    for old, new in replacements:
-        text = text.replace(old, new)
-    text = re.sub(r'[^a-z0-9-]', '', text)
-    text = re.sub(r'-+', '-', text)
-    text = text.strip('-')
-    return text
-
-
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
-
-def allowed_file(filename):
-    """Проверка расширения файла"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def validate_image(file):
-    """Проверка, что файл является изображением (через Pillow)"""
-    if not file:
-        return False
-    if not allowed_file(file.filename):
-        return False
-    try:
-        img = Image.open(file)
-        img.verify()
-        file.seek(0)
-        return True
-    except Exception as e:
-        logger.error(f"Ошибка валидации изображения: {e}")
-        return False
-
-
-def secure_filepath(base_path, filename):
-    """Предотвращает path traversal"""
-    safe_filename = secure_filename(filename)
-    if not safe_filename:
-        safe_filename = f"file_{uuid.uuid4().hex}"
-    full_path = os.path.abspath(os.path.join(base_path, safe_filename))
-    if not full_path.startswith(os.path.abspath(base_path)):
-        raise ValueError("Path traversal detected")
-    return full_path
-
-
-def save_photo(file, folder='gallery', max_size=(1200, 800), quality=85):
-    """
-    Сохраняет фото с автоматическим сжатием и изменением размера.
-    
-    Аргументы:
-        file: файл из request.files
-        folder: папка для сохранения (gallery, rooms, features)
-        max_size: максимальный размер (ширина, высота)
-        quality: качество JPEG (1-100, 85 оптимально)
-    """
-    import io
-    
-    if not validate_image(file):
-        raise ValueError("Файл не является допустимым изображением")
-    
-    # Открываем изображение
-    img = Image.open(file)
-    
-    # Конвертируем в RGB (для JPEG)
-    if img.mode in ('RGBA', 'LA', 'P'):
-        img = img.convert('RGB')
-    
-    # Уменьшаем размер, если изображение больше max_size
-    img.thumbnail(max_size, Image.Resampling.LANCZOS)
-    
-    # Сохраняем во временный буфер с сжатием
-    buffer = io.BytesIO()
-    img.save(buffer, format='JPEG', quality=quality, optimize=True, progressive=True)
-    buffer.seek(0)
-    
-    # Генерируем имя файла
-    safe_name = secure_filename(file.filename)
-    filename = f"{folder}_{uuid.uuid4().hex}.jpg"
-    filepath = secure_filepath(os.path.join(app.config['UPLOAD_FOLDER'], folder), filename)
-    
-    # Сохраняем сжатое изображение
-    with open(filepath, 'wb') as f:
-        f.write(buffer.getvalue())
-    
-    if "AMVERA" in os.environ:
-        return f"/uploads/{folder}/{os.path.basename(filepath)}"
-    else:
-        return f"/static/uploads/{folder}/{os.path.basename(filepath)}"
-
-def admin_required(f):
-    """Декоратор для защиты админ-маршрутов с проверкой сессии"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('admin_logged_in'):
-            flash('Пожалуйста, войдите в систему', 'warning')
-            return redirect(url_for('admin_login'))
-        
-        # Проверка времени сессии (8 часов)
-        last_activity = session.get('last_activity')
-        if last_activity:
-            try:
-                last_activity_dt = datetime.fromisoformat(last_activity)
-                if datetime.now(timezone.utc) - last_activity_dt > timedelta(hours=8):
-                    session.clear()
-                    flash('Сессия истекла. Войдите снова.', 'warning')
-                    return redirect(url_for('admin_login'))
-            except (ValueError, TypeError):
-                session.clear()
-                return redirect(url_for('admin_login'))
-        
-        # Обновляем время активности
-        session['last_activity'] = datetime.now(timezone.utc).isoformat()
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def update_last_activity():
-    """Обновляет время последней активности в сессии"""
-    session['last_activity'] = datetime.now(timezone.utc).isoformat()
-
-
 # ============== МОДЕЛИ ==============
 
 class RoomCategory(db.Model):
@@ -484,7 +269,230 @@ class VisitorStat(db.Model):
         return f"Visitor {self.ip} on {self.visit_date}"
 
 
-# ============== АДМИН-ПАНЕЛЬ ==============
+# ============================================================
+# СЧЁТЧИК УНИКАЛЬНЫХ ПОСЕТИТЕЛЕЙ ПО IP (ПОСЛЕ МОДЕЛЕЙ!)
+# ============================================================
+@app.before_request
+def update_stats():
+    """Обновляет счетчик уникальных посетителей по IP"""
+    # Игнорируем запросы к админке, статике и загрузкам
+    if request.path.startswith('/admin') or request.path.startswith('/static') or request.path.startswith('/uploads'):
+        return
+    
+    # Получаем IP пользователя
+    ip = request.remote_addr
+    # Если сайт за прокси — используйте X-Forwarded-For
+    # ip = request.headers.get('X-Forwarded-For', ip).split(',')[0].strip()
+    
+    today = datetime.now(timezone.utc).date()
+    
+    with app.app_context():
+        stats = SiteStats.query.first()
+        if not stats:
+            stats = SiteStats(
+                total_visits=0, today_visits=0, yesterday_visits=0,
+                total_unique=0, today_unique=0, yesterday_unique=0,
+                last_updated=today
+            )
+            db.session.add(stats)
+            db.session.commit()
+        
+        # Если новый день — обновляем статистику
+        if stats.last_updated != today:
+            stats.yesterday_visits = stats.today_visits
+            stats.yesterday_unique = stats.today_unique
+            stats.today_visits = 0
+            stats.today_unique = 0
+            stats.last_updated = today
+        
+        # Увеличиваем общий счётчик запросов
+        stats.total_visits += 1
+        stats.today_visits += 1
+        
+        # Проверяем, был ли этот IP уже сегодня
+        visitor = VisitorStat.query.filter_by(ip=ip, visit_date=today).first()
+        
+        if visitor:
+            # Уже был сегодня — обновляем время
+            visitor.last_visit = datetime.now(timezone.utc)
+        else:
+            # Новый уникальный посетитель
+            new_visitor = VisitorStat(ip=ip, visit_date=today)
+            db.session.add(new_visitor)
+            stats.total_unique += 1
+            stats.today_unique += 1
+        
+        db.session.commit()
+
+
+# ============================================================
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# ============================================================
+
+@app.template_filter('pluralize')
+def pluralize(count, one, few, many):
+    """
+    Универсальное склонение слов для русского языка
+    
+    Аргументы:
+        count (int): число
+        one (str): форма для 1 (например, 'гость')
+        few (str): форма для 2-4 (например, 'гостя')
+        many (str): форма для 5-20 (например, 'гостей')
+    
+    Пример:
+        {{ 1 | pluralize('гость', 'гостя', 'гостей') }} → 1 гость
+        {{ 2 | pluralize('гость', 'гостя', 'гостей') }} → 2 гостя
+        {{ 5 | pluralize('гость', 'гостя', 'гостей') }} → 5 гостей
+    """
+    if count % 100 in (11, 12, 13, 14):
+        return f"{count} {many}"
+    
+    last_digit = count % 10
+    if last_digit == 1:
+        return f"{count} {one}"
+    elif last_digit in (2, 3, 4):
+        return f"{count} {few}"
+    else:
+        return f"{count} {many}"
+
+
+def transliterate(text):
+    """Транслитерация русского текста в латиницу"""
+    if not text:
+        return ''
+    text = text.lower()
+    replacements = [
+        ('а', 'a'), ('б', 'b'), ('в', 'v'), ('г', 'g'), ('д', 'd'), ('е', 'e'), ('ё', 'yo'),
+        ('ж', 'zh'), ('з', 'z'), ('и', 'i'), ('й', 'y'), ('к', 'k'), ('л', 'l'), ('м', 'm'),
+        ('н', 'n'), ('о', 'o'), ('п', 'p'), ('р', 'r'), ('с', 's'), ('т', 't'), ('у', 'u'),
+        ('ф', 'f'), ('х', 'h'), ('ц', 'ts'), ('ч', 'ch'), ('ш', 'sh'), ('щ', 'sch'),
+        ('ъ', ''), ('ы', 'y'), ('ь', ''), ('э', 'e'), ('ю', 'yu'), ('я', 'ya'),
+        (' ', '-'), ('_', '-')
+    ]
+    for old, new in replacements:
+        text = text.replace(old, new)
+    text = re.sub(r'[^a-z0-9-]', '', text)
+    text = re.sub(r'-+', '-', text)
+    text = text.strip('-')
+    return text
+
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+
+def allowed_file(filename):
+    """Проверка расширения файла"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def validate_image(file):
+    """Проверка, что файл является изображением (через Pillow)"""
+    if not file:
+        return False
+    if not allowed_file(file.filename):
+        return False
+    try:
+        img = Image.open(file)
+        img.verify()
+        file.seek(0)
+        return True
+    except Exception as e:
+        logger.error(f"Ошибка валидации изображения: {e}")
+        return False
+
+
+def secure_filepath(base_path, filename):
+    """Предотвращает path traversal"""
+    safe_filename = secure_filename(filename)
+    if not safe_filename:
+        safe_filename = f"file_{uuid.uuid4().hex}"
+    full_path = os.path.abspath(os.path.join(base_path, safe_filename))
+    if not full_path.startswith(os.path.abspath(base_path)):
+        raise ValueError("Path traversal detected")
+    return full_path
+
+
+def save_photo(file, folder='gallery', max_size=(1200, 800), quality=85):
+    """
+    Сохраняет фото с автоматическим сжатием и изменением размера.
+    
+    Аргументы:
+        file: файл из request.files
+        folder: папка для сохранения (gallery, rooms, features)
+        max_size: максимальный размер (ширина, высота)
+        quality: качество JPEG (1-100, 85 оптимально)
+    """
+    import io
+    
+    if not validate_image(file):
+        raise ValueError("Файл не является допустимым изображением")
+    
+    # Открываем изображение
+    img = Image.open(file)
+    
+    # Конвертируем в RGB (для JPEG)
+    if img.mode in ('RGBA', 'LA', 'P'):
+        img = img.convert('RGB')
+    
+    # Уменьшаем размер, если изображение больше max_size
+    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+    
+    # Сохраняем во временный буфер с сжатием
+    buffer = io.BytesIO()
+    img.save(buffer, format='JPEG', quality=quality, optimize=True, progressive=True)
+    buffer.seek(0)
+    
+    # Генерируем имя файла
+    safe_name = secure_filename(file.filename)
+    filename = f"{folder}_{uuid.uuid4().hex}.jpg"
+    filepath = secure_filepath(os.path.join(app.config['UPLOAD_FOLDER'], folder), filename)
+    
+    # Сохраняем сжатое изображение
+    with open(filepath, 'wb') as f:
+        f.write(buffer.getvalue())
+    
+    if "AMVERA" in os.environ:
+        return f"/uploads/{folder}/{os.path.basename(filepath)}"
+    else:
+        return f"/static/uploads/{folder}/{os.path.basename(filepath)}"
+
+
+def admin_required(f):
+    """Декоратор для защиты админ-маршрутов с проверкой сессии"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            flash('Пожалуйста, войдите в систему', 'warning')
+            return redirect(url_for('admin_login'))
+        
+        # Проверка времени сессии (8 часов)
+        last_activity = session.get('last_activity')
+        if last_activity:
+            try:
+                last_activity_dt = datetime.fromisoformat(last_activity)
+                if datetime.now(timezone.utc) - last_activity_dt > timedelta(hours=8):
+                    session.clear()
+                    flash('Сессия истекла. Войдите снова.', 'warning')
+                    return redirect(url_for('admin_login'))
+            except (ValueError, TypeError):
+                session.clear()
+                return redirect(url_for('admin_login'))
+        
+        # Обновляем время активности
+        session['last_activity'] = datetime.now(timezone.utc).isoformat()
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def update_last_activity():
+    """Обновляет время последней активности в сессии"""
+    session['last_activity'] = datetime.now(timezone.utc).isoformat()
+
+
+# ============================================================
+# АДМИН-ПАНЕЛЬ
+# ============================================================
 
 # ⭐ СКРЫТАЯ АДМИН-ПАНЕЛЬ
 @app.route('/admin')
@@ -576,7 +584,9 @@ def admin_logout():
     return redirect(url_for('admin_login'))
 
 
-# ============== УПРАВЛЕНИЕ ГАЛЕРЕЕЙ ==============
+# ============================================================
+# УПРАВЛЕНИЕ ГАЛЕРЕЕЙ
+# ============================================================
 
 @app.route('/admin/gallery')
 @admin_required
@@ -683,8 +693,11 @@ def admin_move_gallery_photo(id, direction):
     db.session.commit()
 
     return redirect(url_for('admin_gallery'))
-    
-# ============== УПРАВЛЕНИЕ НОМЕРАМИ ==============
+
+
+# ============================================================
+# УПРАВЛЕНИЕ НОМЕРАМИ
+# ============================================================
 
 @app.route('/admin/rooms')
 @admin_required
@@ -867,8 +880,10 @@ def admin_delete_room(id):
     flash('Номер удалён!', 'success')
     return redirect(url_for('admin_rooms'))
 
-    
-# ============== УПРАВЛЕНИЕ КАТЕГОРИЯМИ ==============
+
+# ============================================================
+# УПРАВЛЕНИЕ КАТЕГОРИЯМИ
+# ============================================================
 
 @app.route('/admin/categories')
 @admin_required
@@ -934,7 +949,9 @@ def admin_delete_category(id):
     return redirect(url_for('admin_categories'))
 
 
-# ============== ЗАЯВКИ ==============
+# ============================================================
+# ЗАЯВКИ
+# ============================================================
 
 @app.route('/admin/bookings')
 @admin_required
@@ -955,7 +972,9 @@ def admin_process_booking(id):
     return redirect(url_for('admin_bookings'))
 
 
-# ============== УПРАВЛЕНИЕ PDF-ДОКУМЕНТАМИ ==============
+# ============================================================
+# УПРАВЛЕНИЕ PDF-ДОКУМЕНТАМИ
+# ============================================================
 
 @app.route('/admin/documents')
 @admin_required
@@ -1062,6 +1081,7 @@ def admin_delete_document(id):
     flash('Документ удалён!', 'success')
     return redirect(url_for('admin_documents'))
 
+
 @app.route('/uploads/documents/<path:filename>')
 def uploaded_document(filename):
     if "AMVERA" in os.environ:
@@ -1070,7 +1090,10 @@ def uploaded_document(filename):
         documents_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents')
     return send_from_directory(documents_path, filename)
 
-# ============== ПУБЛИЧНЫЕ МАРШРУТЫ ==============
+
+# ============================================================
+# ПУБЛИЧНЫЕ МАРШРУТЫ
+# ============================================================
 
 @app.route('/')
 def home():
@@ -1120,12 +1143,13 @@ def room_detail(slug):
 
 @app.context_processor
 def inject_models():
-    """Делает моде��и доступными во всех шаблонах"""
+    """Делает модели доступными во всех шаблонах"""
     return {
         'Document': Document,
         'datetime': datetime,
         'csrf_token': generate_csrf
     }
+
 
 @app.route('/sitemap.xml')
 def sitemap():
@@ -1157,11 +1181,15 @@ def sitemap():
     xml += '</urlset>'
     return xml, 200, {'Content-Type': 'application/xml'}
     
+    
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_PATH, filename)
 
-# ============== ЗАПУСК ==============
+
+# ============================================================
+# ЗАПУСК
+# ============================================================
 
 if __name__ == '__main__':
     with app.app_context():
