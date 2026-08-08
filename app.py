@@ -1,4 +1,4 @@
-# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order + PostgreSQL
+# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order + PostgreSQL + Счётчик посещений
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -110,6 +110,36 @@ ADMIN_PASSWORD_HASH = generate_password_hash(
 )
 
 db = SQLAlchemy(app)
+
+
+# ✅ НОВЫЙ БЛОК: СЧЁТЧИК ПОСЕЩЕНИЙ
+@app.before_request
+def update_stats():
+    """Обновляет счетчик посещений при каждом запросе"""
+    # Игнорируем запросы к админке, статике и загрузкам
+    if request.path.startswith('/admin') or request.path.startswith('/static') or request.path.startswith('/uploads'):
+        return
+    
+    with app.app_context():
+        stats = SiteStats.query.first()
+        today = datetime.now(timezone.utc).date()
+        
+        if stats:
+            # Если наступил новый день — переносим данные
+            if stats.last_updated != today:
+                stats.yesterday_visits = stats.today_visits
+                stats.today_visits = 0
+                stats.last_updated = today
+            stats.total_visits += 1
+            stats.today_visits += 1
+        else:
+            # Первое посещение
+            stats = SiteStats(total_visits=1, today_visits=1, last_updated=today)
+            db.session.add(stats)
+        
+        db.session.commit()
+# ✅ КОНЕЦ НОВОГО БЛОКА
+
 
 @app.template_filter('pluralize')
 def pluralize(count, one, few, many):
@@ -400,6 +430,20 @@ class Document(db.Model):
         return self.title
 
 
+# ✅ НОВАЯ МОДЕЛЬ: СТАТИСТИКА ПОСЕЩЕНИЙ
+class SiteStats(db.Model):
+    """Статистика посещений сайта"""
+    id = db.Column(db.Integer, primary_key=True)
+    total_visits = db.Column(db.Integer, default=0)
+    today_visits = db.Column(db.Integer, default=0)
+    yesterday_visits = db.Column(db.Integer, default=0)
+    last_updated = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
+    
+    def __repr__(self):
+        return f"Статистика: всего {self.total_visits}, сегодня {self.today_visits}"
+# ✅ КОНЕЦ НОВОЙ МОДЕЛИ
+
+
 # ============== АДМИН-ПАНЕЛЬ ==============
 
 # ⭐ СКРЫТАЯ АДМИН-ПАНЕЛЬ
@@ -427,12 +471,28 @@ def admin_index():
     categories_count = RoomCategory.query.count()
     gallery_count = GalleryPhoto.query.count()
     documents_count = Document.query.count()
+    
+    # ✅ НОВЫЙ БЛОК: ПОЛУЧАЕМ СТАТИСТИКУ
+    stats = SiteStats.query.first()
+    if stats:
+        total_visits = stats.total_visits
+        today_visits = stats.today_visits
+        yesterday_visits = stats.yesterday_visits
+    else:
+        total_visits = 0
+        today_visits = 0
+        yesterday_visits = 0
+    # ✅ КОНЕЦ НОВОГО БЛОКА
+    
     return render_template('admin/dashboard.html',
                            rooms_count=rooms_count,
                            available_rooms=available_rooms,
                            categories_count=categories_count,
                            gallery_count=gallery_count,
                            documents_count=documents_count,
+                           total_visits=total_visits,
+                           today_visits=today_visits,
+                           yesterday_visits=yesterday_visits,
                            now=datetime.now(timezone.utc))
 
 
