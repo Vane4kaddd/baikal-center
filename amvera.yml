@@ -7,9 +7,7 @@ build:
   buildCommand: pip install -r requirements.txt
 
 run:
-  command: |
-    python migrate_stats.py
-    python app.py
+  command: python app.py
   containerPort: 5000
 
 persistentPaths:
