@@ -228,6 +228,94 @@
         margin-bottom: 0;
     }
 
+    /* ===== ВИДЖЕТЫ СТАТИСТИКИ ПОСЕЩЕНИЙ ===== */
+    .stats-widgets {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .stats-widget {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 20px 18px;
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .stats-widget:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border-color: rgba(212, 175, 55, 0.2);
+    }
+
+    .stats-widget .icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    .stats-widget .icon.gold {
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--gold);
+    }
+
+    .stats-widget .icon.green {
+        background: rgba(46, 125, 50, 0.12);
+        color: #2E7D32;
+    }
+
+    .stats-widget .icon.blue {
+        background: rgba(33, 150, 243, 0.12);
+        color: #2196F3;
+    }
+
+    .stats-widget .icon.purple {
+        background: rgba(156, 39, 176, 0.12);
+        color: #9C27B0;
+    }
+
+    .stats-widget .info {
+        flex: 1;
+    }
+
+    .stats-widget .info .value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        line-height: 1.2;
+    }
+
+    .stats-widget .info .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray);
+        font-weight: 500;
+    }
+
+    .stats-widget .info .sub {
+        font-size: 0.7rem;
+        color: var(--gray);
+        margin-top: 2px;
+        opacity: 0.7;
+    }
+
+    .stats-widget .info .sub i {
+        margin-right: 4px;
+    }
+
+    /* ===== АДАПТИВНОСТЬ ===== */
     @media (max-width: 1200px) {
         .stat-grid {
             grid-template-columns: repeat(3, 1fr);
@@ -238,9 +326,44 @@
         .stat-grid {
             grid-template-columns: repeat(2, 1fr);
         }
+        .stats-widgets {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     @media (max-width: 768px) {
+        /* Компактные виджеты для телефона */
+        .stats-widgets {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-widget {
+            padding: 12px 14px;
+            gap: 10px;
+            border-radius: 12px;
+        }
+        
+        .stats-widget .icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+            border-radius: 10px;
+        }
+        
+        .stats-widget .info .value {
+            font-size: 1.2rem;
+        }
+        
+        .stats-widget .info .label {
+            font-size: 0.6rem;
+        }
+        
+        .stats-widget .info .sub {
+            font-size: 0.6rem;
+        }
+        
         .stat-grid {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -268,113 +391,91 @@
             transform: translateX(-50%);
         }
         
-        .dashboard-header {
-            text-align: center !important;
-        }
-        
         .date-badge {
             position: static !important;
             margin-top: 10px !important;
         }
     }
-    /* ===== ВИДЖЕТЫ СТАТИСТИКИ ПОСЕЩЕНИЙ ===== */
-.stats-widgets {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 30px;
-}
 
-.stats-widget {
-    background: var(--white);
-    border-radius: 16px;
-    padding: 20px 18px;
-    border: 1px solid rgba(212, 175, 55, 0.08);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.stats-widget:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    border-color: rgba(212, 175, 55, 0.2);
-}
-
-.stats-widget .icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    flex-shrink: 0;
-}
-
-.stats-widget .icon.gold {
-    background: rgba(212, 175, 55, 0.12);
-    color: var(--gold);
-}
-
-.stats-widget .icon.green {
-    background: rgba(46, 125, 50, 0.12);
-    color: #2E7D32;
-}
-
-.stats-widget .icon.blue {
-    background: rgba(33, 150, 243, 0.12);
-    color: #2196F3;
-}
-
-.stats-widget .icon.purple {
-    background: rgba(156, 39, 176, 0.12);
-    color: #9C27B0;
-}
-
-.stats-widget .info {
-    flex: 1;
-}
-
-.stats-widget .info .value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--primary-dark);
-    line-height: 1.2;
-}
-
-.stats-widget .info .label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray);
-    font-weight: 500;
-}
-
-.stats-widget .info .sub {
-    font-size: 0.7rem;
-    color: var(--gray);
-    margin-top: 2px;
-    opacity: 0.7;
-}
-
-.stats-widget .info .sub i {
-    margin-right: 4px;
-}
-
-@media (max-width: 992px) {
-    .stats-widgets {
-        grid-template-columns: repeat(2, 1fr);
+    @media (max-width: 480px) {
+        /* Очень маленькие экраны */
+        .stats-widgets {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .stats-widget {
+            padding: 10px 12px;
+            gap: 8px;
+            border-radius: 10px;
+        }
+        
+        .stats-widget .icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+        
+        .stats-widget .info .value {
+            font-size: 1rem;
+        }
+        
+        .stats-widget .info .label {
+            font-size: 0.55rem;
+            letter-spacing: 0.3px;
+        }
+        
+        .stats-widget .info .sub {
+            font-size: 0.5rem;
+        }
+        
+        .stat-grid {
+            gap: 10px;
+        }
+        
+        .stat-card .card-body {
+            padding: 14px 12px;
+        }
+        
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+        }
+        
+        .stat-label {
+            font-size: 0.65rem;
+        }
+        
+        .stat-sub {
+            font-size: 0.65rem;
+        }
+        
+        .action-card {
+            padding: 14px 10px;
+        }
+        
+        .action-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        
+        .action-card h4 {
+            font-size: 0.85rem;
+        }
+        
+        .action-card p {
+            font-size: 0.7rem;
+        }
     }
-}
-
-@media (max-width: 576px) {
-    .stats-widgets {
-        grid-template-columns: 1fr;
-    }
-}
 </style>
 {% endblock %}
 
@@ -387,6 +488,7 @@
         {{ now.strftime('%d %B %Y') | e if now else 'Сегодня' }}
     </div>
 </div>
+
 <!-- ===== ВИДЖЕТЫ ПОСЕЩЕНИЙ ===== -->
 <div class="stats-widgets" data-aos="fade-up">
     <!-- Всего посещений -->
@@ -456,6 +558,7 @@
         </div>
     </div>
 </div>
+
 <div class="stat-grid">
     <a href="{{ url_for('admin_rooms') }}" class="stat-card stat-rooms" 
        aria-label="Перейти к управлению номерами">
