@@ -489,54 +489,39 @@
     </div>
 </div>
 
-<!-- ===== ВИДЖЕТЫ ПОСЕЩЕНИЙ ===== -->
+<!-- ===== ВИДЖЕТЫ СТАТИСТИКИ ПОСЕЩЕНИЙ ===== -->
 <div class="stats-widgets" data-aos="fade-up">
-    <!-- Всего посещений -->
+    <!-- Всего уникальных посетителей -->
     <div class="stats-widget">
         <div class="icon gold">
-            <i class="fas fa-eye"></i>
+            <i class="fas fa-users"></i>
         </div>
         <div class="info">
-            <div class="value">{{ total_visits }}</div>
-            <div class="label">Всего посещений</div>
+            <div class="value">{{ total_unique }}</div>
+            <div class="label">Всего посетителей</div>
         </div>
     </div>
     
-    <!-- Сегодня -->
+    <!-- Сегодня уникальных -->
     <div class="stats-widget">
         <div class="icon green">
-            <i class="fas fa-calendar-day"></i>
+            <i class="fas fa-user-plus"></i>
         </div>
         <div class="info">
-            <div class="value">{{ today_visits }}</div>
+            <div class="value">{{ today_unique }}</div>
             <div class="label">Сегодня</div>
-            <div class="sub"><i class="fas fa-arrow-up" style="color: #2E7D32;"></i> +{{ today_visits if today_visits > 0 else 0 }} сегодня</div>
+            <div class="sub"><i class="fas fa-arrow-up" style="color: #2E7D32;"></i> уникальных</div>
         </div>
     </div>
     
-    <!-- Вчера -->
+    <!-- Вчера уникальных -->
     <div class="stats-widget">
         <div class="icon blue">
-            <i class="fas fa-calendar-day"></i>
+            <i class="fas fa-user-clock"></i>
         </div>
         <div class="info">
-            <div class="value">{{ yesterday_visits }}</div>
+            <div class="value">{{ yesterday_unique }}</div>
             <div class="label">Вчера</div>
-            <div class="sub">
-                {% if yesterday_visits > 0 %}
-                    <i class="fas fa-arrow-{{ 'up' if today_visits > yesterday_visits else 'down' }}" 
-                       style="color: {{ '#2E7D32' if today_visits > yesterday_visits else '#dc3545' }};">
-                    </i>
-                    {% if today_visits > yesterday_visits %}
-                        +{{ today_visits - yesterday_visits }}
-                    {% else %}
-                        {{ yesterday_visits - today_visits }}
-                    {% endif %}
-                    за день
-                {% else %}
-                    <i class="fas fa-minus" style="color: var(--gray);"></i> нет данных
-                {% endif %}
-            </div>
         </div>
     </div>
     
@@ -547,8 +532,8 @@
         </div>
         <div class="info">
             <div class="value">
-                {% if total_visits > 0 %}
-                    {{ (total_visits / (now.strftime('%j')|int))|round(1) }}
+                {% if total_unique > 0 %}
+                    {{ (total_unique / (now.strftime('%j')|int))|round(1) }}
                 {% else %}
                     0
                 {% endif %}
