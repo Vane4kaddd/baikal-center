@@ -19,6 +19,7 @@ def migrate():
             try:
                 conn.execute(text(f"ALTER TABLE site_stats ADD COLUMN {col} INTEGER DEFAULT 0"))
                 print(f"✅ Колонка {col} добавлена")
+                conn.commit()  # ← ВОТ ЭТО ВАЖНО! Сохраняем изменения после каждой колонки
             except Exception as e:
                 if 'already exists' in str(e):
                     print(f"⚠️ Колонка {col} уже существует")
@@ -37,11 +38,13 @@ def migrate():
                     UNIQUE(ip, visit_date)
                 )
             """))
+            conn.commit()  # ← И ЗДЕСЬ ТОЖЕ ВАЖНО!
             print("✅ Таблица visitor_stat создана")
         except Exception as e:
             print(f"❌ Ошибка создания visitor_stat: {e}")
+            conn.rollback()  # ← Откатываем изменения при ошибке
         
-        conn.commit()
+        conn.commit()  # ← Финальный коммит на всякий случай
 
 if __name__ == "__main__":
     migrate()
