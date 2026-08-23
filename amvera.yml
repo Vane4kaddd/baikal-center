@@ -1,6 +1,9 @@
 meta:
   version: 1.0
   name: baikal-center
+  toolchain:
+    name: python
+    version: "3.11"
 
 build:
   commands:
