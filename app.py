@@ -1573,26 +1573,29 @@ def inject_models():
     }
 
 # ============================================================
-# ЗАПУСК
+# СОЗДАНИЕ ТАБЛИЦ ПРИ СТАРТЕ (выполняется всегда)
 # ============================================================
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        if not Contact.query.first():
-            contact = Contact(
-                name="Байкал-центр",
-                address="Республика Бурятия, пос. Горячинск, ул. Октябрьская, 15Б",
-                phone="+7 (924) 353-32-64",
-                phone2="+7 (924) 653-97-50",
-            )
-            db.session.add(contact)
+with app.app_context():
+    db.create_all()
+    if not Contact.query.first():
+        contact = Contact(
+            name="Байкал-центр",
+            address="Республика Бурятия, пос. Горячинск, ул. Октябрьская, 15Б",
+            phone="+7 (924) 353-32-64",
+            phone2="+7 (924) 653-97-50",
+        )
+        db.session.add(contact)
         db.session.commit()
         print("✅ База данных готова!")
 
+# ============================================================
+# ЗАПУСК (для локальной разработки через python app.py)
+# ============================================================
+if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     print("🏔️ Байкал-центр запущен!")
     print("📍 http://127.0.0.1:5000")
     print("🔧 http://127.0.0.1:5000/admin")
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
+
