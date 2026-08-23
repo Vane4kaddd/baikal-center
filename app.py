@@ -1576,17 +1576,24 @@ def inject_models():
 # СОЗДАНИЕ ТАБЛИЦ ПРИ СТАРТЕ (выполняется всегда)
 # ============================================================
 with app.app_context():
-    db.create_all()
-    if not Contact.query.first():
-        contact = Contact(
-            name="Байкал-центр",
-            address="Республика Бурятия, пос. Горячинск, ул. Октябрьская, 15Б",
-            phone="+7 (924) 353-32-64",
-            phone2="+7 (924) 653-97-50",
-        )
-        db.session.add(contact)
-        db.session.commit()
+    try:
+        db.create_all()
+        print("✅ Таблицы созданы (или уже существуют)")
+        if not Contact.query.first():
+            contact = Contact(
+                name="Байкал-центр",
+                address="Республика Бурятия, пос. Горячинск, ул. Октябрьская, 15Б",
+                phone="+7 (924) 353-32-64",
+                phone2="+7 (924) 653-97-50",
+            )
+            db.session.add(contact)
+            db.session.commit()
+            print("✅ Контакт добавлен")
         print("✅ База данных готова!")
+    except Exception as e:
+        print(f"❌ ОШИБКА при инициализации БД: {e}")
+        import traceback
+        traceback.print_exc()
 
 # ============================================================
 # ЗАПУСК (для локальной разработки через python app.py)
