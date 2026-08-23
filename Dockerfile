@@ -5,4 +5,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /data /data/uploads /data/instance
 EXPOSE 5000
-CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:${PORT:-5000}"]
+
+# Запускаем приложение
+CMD ["python", "app.py"]
