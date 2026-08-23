@@ -10,7 +10,7 @@ build:
     - pip install -r requirements.txt
 
 run:
-  command: python app.py
+  command: gunicorn app:app
   port: 5000
 
 persistentPaths:
