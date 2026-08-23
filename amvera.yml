@@ -1,14 +1,17 @@
 meta:
-  environment: python
+  version: 1.0
+  name: baikal-center
   toolchain:
-    name: pip
+    name: python
+    version: "3.11"
 
 build:
-  buildCommand: pip install -r requirements.txt
+  commands:
+    - pip install -r requirements.txt
 
 run:
   command: python app.py
-  containerPort: 5000
+  port: 5000
 
 persistentPaths:
   - /data
