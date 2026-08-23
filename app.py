@@ -1,5 +1,5 @@
-# app.py — ПОЛНАЯ ВЕРСИЯ С ЛИЧНЫМИ КАБИНЕТАМИ И БРОНИРОВАНИЕМ
-from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, jsonify
+# app.py — ПОЛНАЯ БЕЗОПАСНАЯ ВЕРСИЯ С ПОЛЕМ order + PostgreSQL
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -110,260 +110,6 @@ ADMIN_PASSWORD_HASH = generate_password_hash(
 
 db = SQLAlchemy(app)
 
-# ============================================================
-# НАСТРОЙКА FLASK-LOGIN
-# ============================================================
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Пожалуйста, войдите, чтобы забронировать номер.'
-login_manager.login_message_category = 'warning'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
-# ============================================================
-# МОДЕЛИ (СУЩЕСТВУЮЩИЕ + НОВЫЕ)
-# ============================================================
-
-class RoomCategory(db.Model):
-    """Категория номера"""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    slug = db.Column(db.String(100), unique=True)
-    description = db.Column(db.Text)
-    rooms = db.relationship('Room', backref='category_ref', lazy=True)
-
-    def __repr__(self):
-        return self.name
-
-class Room(db.Model):
-    """Номер"""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    slug = db.Column(db.String(200), unique=True)
-    category_id = db.Column(db.Integer, db.ForeignKey('room_category.id'))
-    description = db.Column(db.Text)
-    price = db.Column(db.Float)
-    capacity = db.Column(db.Integer)
-    main_photo = db.Column(db.String(500))
-    amenities = db.Column(db.Text)
-    is_available = db.Column(db.Boolean, default=True)
-    is_featured = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    order = db.Column(db.Integer, default=0)
-
-    category = db.relationship('RoomCategory', backref='room_list', overlaps="category_ref,rooms")
-    # Связь с бронированиями
-    bookings = db.relationship('Booking', backref='room', lazy=True)
-
-    def __init__(self, *args, **kwargs):
-        super(Room, self).__init__(*args, **kwargs)
-        if not self.slug:
-            self.generate_slug()
-
-    def generate_slug(self):
-        category_slug = ''
-        if self.category_id:
-            category = RoomCategory.query.get(self.category_id)
-            if category:
-                category_slug = category.slug + '-'
-        name_slug = transliterate(self.name)
-        base_slug = category_slug + name_slug
-        slug = base_slug
-        counter = 1
-        while Room.query.filter_by(slug=slug).first():
-            slug = f"{base_slug}-{counter}"
-            counter += 1
-        self.slug = slug
-
-    def __repr__(self):
-        return self.name
-
-class GalleryPhoto(db.Model):
-    """Фото для галереи базы отдыха"""
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False, default="Фото")
-    image = db.Column(db.String(500), nullable=False)
-    description = db.Column(db.Text)
-    order = db.Column(db.Integer, default=0)
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    def __repr__(self):
-        return self.title
-
-class Contact(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), default="Байкал-центр")
-    address = db.Column(db.Text)
-    phone = db.Column(db.String(20))
-    phone2 = db.Column(db.String(20))
-    email = db.Column(db.String(100))
-
-    def __repr__(self):
-        return self.name
-
-class BookingRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    email = db.Column(db.String(100))
-    check_in = db.Column(db.Date)
-    check_out = db.Column(db.Date)
-    guests = db.Column(db.Integer)
-    message = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    is_processed = db.Column(db.Boolean, default=False)
-
-    def __repr__(self):
-        return f"Заявка от {self.name}"
-
-class RoomImage(db.Model):
-    """Дополнительные фото номера"""
-    id = db.Column(db.Integer, primary_key=True)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='CASCADE'))
-    image = db.Column(db.String(500), nullable=False)
-    caption = db.Column(db.String(200))
-    order = db.Column(db.Integer, default=0)
-    is_main = db.Column(db.Boolean, default=False)
-    room = db.relationship('Room', backref='images')
-
-    def __repr__(self):
-        return f"Фото #{self.id}"
-
-class Document(db.Model):
-    """PDF-документы для подвала сайта"""
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    file_path = db.Column(db.String(500), nullable=False)
-    icon = db.Column(db.String(50), default='fa-file-pdf')
-    is_published = db.Column(db.Boolean, default=True)
-    order = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    def __repr__(self):
-        return self.title
-
-class SiteStats(db.Model):
-    """Статистика посещений сайта"""
-    id = db.Column(db.Integer, primary_key=True)
-    total_visits = db.Column(db.Integer, default=0)
-    today_visits = db.Column(db.Integer, default=0)
-    yesterday_visits = db.Column(db.Integer, default=0)
-    total_unique = db.Column(db.Integer, default=0)
-    today_unique = db.Column(db.Integer, default=0)
-    yesterday_unique = db.Column(db.Integer, default=0)
-    last_updated = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
-
-    def __repr__(self):
-        return f"Статистика: всего {self.total_visits}, сегодня {self.today_visits}, уникальных {self.total_unique}"
-
-class VisitorStat(db.Model):
-    """Статистика уникальных посетителей по IP"""
-    id = db.Column(db.Integer, primary_key=True)
-    ip = db.Column(db.String(45), nullable=False)
-    visit_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
-    first_visit = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    last_visit = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    __table_args__ = (db.UniqueConstraint('ip', 'visit_date', name='unique_ip_day'),)
-
-    def __repr__(self):
-        return f"Visitor {self.ip} on {self.visit_date}"
-
-# ============================================================
-# НОВЫЕ МОДЕЛИ ДЛЯ БРОНИРОВАНИЯ
-# ============================================================
-
-class User(db.Model, UserMixin):
-    """Пользователь (личный кабинет)"""
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    phone = db.Column(db.String(20), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-    name = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    is_admin = db.Column(db.Boolean, default=False)
-    last_login = db.Column(db.DateTime, default=None)
-
-    bookings = db.relationship('Booking', backref='user', lazy=True)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    def __repr__(self):
-        return f"User {self.email}"
-
-class Booking(db.Model):
-    """Бронирование номера"""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
-    check_in = db.Column(db.Date, nullable=False)
-    check_out = db.Column(db.Date, nullable=False)
-    guests = db.Column(db.Integer, nullable=False, default=1)
-    total_price = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, confirmed, cancelled, completed
-    special_requests = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
-    def __repr__(self):
-        return f"Booking #{self.id} for room {self.room_id}"
-    
-# ============================================================
-# СЧЁТЧИК УНИКАЛЬНЫХ ПОСЕТИТЕЛЕЙ
-# ============================================================
-@app.before_request
-def update_stats():
-    """Обновляет счетчик уникальных посетителей по IP"""
-    if request.path.startswith('/admin') or request.path.startswith('/static') or request.path.startswith('/uploads'):
-        return
-
-    ip = request.remote_addr
-    today = datetime.now(timezone.utc).date()
-
-    with app.app_context():
-        stats = SiteStats.query.first()
-        if not stats:
-            stats = SiteStats(
-                total_visits=0, today_visits=0, yesterday_visits=0,
-                total_unique=0, today_unique=0, yesterday_unique=0,
-                last_updated=today
-            )
-            db.session.add(stats)
-            db.session.commit()
-
-        if stats.last_updated != today:
-            stats.yesterday_visits = stats.today_visits
-            stats.yesterday_unique = stats.today_unique
-            stats.today_visits = 0
-            stats.today_unique = 0
-            stats.last_updated = today
-
-        stats.total_visits += 1
-        stats.today_visits += 1
-
-        visitor = VisitorStat.query.filter_by(ip=ip, visit_date=today).first()
-        if visitor:
-            visitor.last_visit = datetime.now(timezone.utc)
-        else:
-            new_visitor = VisitorStat(ip=ip, visit_date=today)
-            db.session.add(new_visitor)
-            stats.total_unique += 1
-            stats.today_unique += 1
-
-        db.session.commit()
-
-# ============================================================
-# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-# ============================================================
-
 @app.template_filter('pluralize')
 def pluralize(count, one, few, many):
     """
@@ -378,6 +124,8 @@ def pluralize(count, one, few, many):
         return f"{count} {few}"
     else:
         return f"{count} {many}"
+
+# ============== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==============
 
 def transliterate(text):
     """Транслитерация русского текста в латиницу"""
@@ -490,9 +238,136 @@ def update_last_activity():
     """Обновляет время последней активности в сессии"""
     session['last_activity'] = datetime.now(timezone.utc).isoformat()
 
-# ============================================================
-# АДМИН-ПАНЕЛЬ
-# ============================================================
+
+# ============== МОДЕЛИ ==============
+
+class RoomCategory(db.Model):
+    """Категория номера"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    slug = db.Column(db.String(100), unique=True)
+    description = db.Column(db.Text)
+    rooms = db.relationship('Room', backref='category_ref', lazy=True)
+
+    def __repr__(self):
+        return self.name
+
+
+class Room(db.Model):
+    """Номер"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    slug = db.Column(db.String(200), unique=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('room_category.id'))
+    description = db.Column(db.Text)
+    price = db.Column(db.Float)
+    capacity = db.Column(db.Integer)
+    main_photo = db.Column(db.String(500))
+    amenities = db.Column(db.Text)
+    is_available = db.Column(db.Boolean, default=True)
+    is_featured = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # ✅ ДОБАВЛЕНО: поле для ручной сортировки
+    order = db.Column(db.Integer, default=0)
+
+    category = db.relationship('RoomCategory', backref='room_list', overlaps="category_ref,rooms")
+
+    def __init__(self, *args, **kwargs):
+        super(Room, self).__init__(*args, **kwargs)
+        if not self.slug:
+            self.generate_slug()
+
+    def generate_slug(self):
+        category_slug = ''
+        if self.category_id:
+            category = RoomCategory.query.get(self.category_id)
+            if category:
+                category_slug = category.slug + '-'
+        name_slug = transliterate(self.name)
+        base_slug = category_slug + name_slug
+        slug = base_slug
+        counter = 1
+        while Room.query.filter_by(slug=slug).first():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        self.slug = slug
+
+    def __repr__(self):
+        return self.name
+
+
+class GalleryPhoto(db.Model):
+    """Фото для галереи базы отдыха"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False, default="Фото")
+    image = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text)
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return self.title
+
+
+class Contact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), default="Байкал-центр")
+    address = db.Column(db.Text)
+    phone = db.Column(db.String(20))
+    phone2 = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+
+    def __repr__(self):
+        return self.name
+
+
+class BookingRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    check_in = db.Column(db.Date)
+    check_out = db.Column(db.Date)
+    guests = db.Column(db.Integer)
+    message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    is_processed = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f"Заявка от {self.name}"
+
+
+class RoomImage(db.Model):
+    """Дополнительные фото номера"""
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='CASCADE'))
+    image = db.Column(db.String(500), nullable=False)
+    caption = db.Column(db.String(200))
+    order = db.Column(db.Integer, default=0)
+    is_main = db.Column(db.Boolean, default=False)
+    room = db.relationship('Room', backref='images')
+
+    def __repr__(self):
+        return f"Фото #{self.id}"
+
+
+class Document(db.Model):
+    """PDF-документы для подвала сайта"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    icon = db.Column(db.String(50), default='fa-file-pdf')
+    is_published = db.Column(db.Boolean, default=True)
+    order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return self.title
+
+
+# ============== АДМИН-ПАНЕЛЬ ==============
 
 # ⭐ СКРЫТАЯ АДМИН-ПАНЕЛЬ
 @app.route('/admin')
@@ -519,38 +394,14 @@ def admin_index():
     categories_count = RoomCategory.query.count()
     gallery_count = GalleryPhoto.query.count()
     documents_count = Document.query.count()
-    bookings_count = Booking.query.count()
-
-    stats = SiteStats.query.first()
-    if stats:
-        total_visits = stats.total_visits
-        today_visits = stats.today_visits
-        yesterday_visits = stats.yesterday_visits
-        total_unique = stats.total_unique
-        today_unique = stats.today_unique
-        yesterday_unique = stats.yesterday_unique
-    else:
-        total_visits = 0
-        today_visits = 0
-        yesterday_visits = 0
-        total_unique = 0
-        today_unique = 0
-        yesterday_unique = 0
-
     return render_template('admin/dashboard.html',
                            rooms_count=rooms_count,
                            available_rooms=available_rooms,
                            categories_count=categories_count,
                            gallery_count=gallery_count,
                            documents_count=documents_count,
-                           total_visits=total_visits,
-                           today_visits=today_visits,
-                           yesterday_visits=yesterday_visits,
-                           total_unique=total_unique,
-                           today_unique=today_unique,
-                           yesterday_unique=yesterday_unique,
-                           now=datetime.now(timezone.utc),
-                           bookings_count=bookings_count)
+                           now=datetime.now(timezone.utc))
+
 
 import logging
 
@@ -584,38 +435,8 @@ def admin_logout():
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('admin_login'))
 
-# ============================================================
-# АДМИНКА: УПРАВЛЕНИЕ БРОНИРОВАНИЯМИ (НОВОЕ)
-# ============================================================
 
-@app.route('/admin/bookings')
-@admin_required
-def admin_bookings_list():
-    update_last_activity()
-    status_filter = request.args.get('status', 'all')
-    query = Booking.query
-    if status_filter != 'all':
-        query = query.filter_by(status=status_filter)
-    bookings = query.order_by(Booking.created_at.desc()).all()
-    return render_template('admin/bookings_list.html', bookings=bookings, status_filter=status_filter, now=datetime.now(timezone.utc))
-
-@app.route('/admin/bookings/<int:id>/update-status', methods=['POST'])
-@admin_required
-def admin_update_booking_status(id):
-    update_last_activity()
-    booking = Booking.query.get_or_404(id)
-    new_status = request.form.get('status')
-    if new_status in ['pending', 'confirmed', 'cancelled', 'completed']:
-        booking.status = new_status
-        db.session.commit()
-        flash('Статус бронирования обновлён.', 'success')
-    else:
-        flash('Некорректный статус.', 'danger')
-    return redirect(url_for('admin_bookings_list'))
-
-# ============================================================
-# УПРАВЛЕНИЕ ГАЛЕРЕЕЙ
-# ============================================================
+# ============== УПРАВЛЕНИЕ ГАЛЕРЕЕЙ ==============
 
 @app.route('/admin/gallery')
 @admin_required
@@ -718,9 +539,12 @@ def admin_move_gallery_photo(id, direction):
 
     return redirect(url_for('admin_gallery'))
 
-# ============================================================
-# УПРАВЛЕНИЕ НОМЕРАМИ
-# ============================================================
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_PATH, filename)
+    
+# ============== УПРАВЛЕНИЕ НОМЕРАМИ ==============
 
 @app.route('/admin/rooms')
 @admin_required
@@ -733,7 +557,8 @@ def admin_rooms():
         category_id = int(category_id)
         selected_category = category_id
         query = query.filter_by(category_id=category_id)
-
+    
+    # ✅ ИЗМЕНЕНО: сортировка по полю order, затем по дате создания
     rooms = query.order_by(Room.order.asc(), Room.created_at.desc()).all()
 
     categories = RoomCategory.query.all()
@@ -817,7 +642,8 @@ def admin_edit_room(id):
         except (ValueError, TypeError):
             flash('Некорректная цена или вместимость!', 'danger')
             return render_template('admin/edit_room.html', room=room, categories=categories)
-
+        
+        # ✅ ДОБАВЛЕНО: получение значения order из формы
         try:
             room.order = int(request.form.get('order', 0))
         except (ValueError, TypeError):
@@ -900,9 +726,8 @@ def admin_delete_room(id):
     flash('Номер удалён!', 'success')
     return redirect(url_for('admin_rooms'))
 
-# ============================================================
-# УПРАВЛЕНИЕ КАТЕГОРИЯМИ
-# ============================================================
+    
+# ============== УПРАВЛЕНИЕ КАТЕГОРИЯМИ ==============
 
 @app.route('/admin/categories')
 @admin_required
@@ -963,9 +788,8 @@ def admin_delete_category(id):
 
     return redirect(url_for('admin_categories'))
 
-# ============================================================
-# ЗАЯВКИ
-# ============================================================
+
+# ============== ЗАЯВКИ ==============
 
 @app.route('/admin/bookings')
 @admin_required
@@ -984,9 +808,8 @@ def admin_process_booking(id):
     flash('Заявка обработана!', 'success')
     return redirect(url_for('admin_bookings'))
 
-# ============================================================
-# УПРАВЛЕНИЕ PDF-ДОКУМЕНТАМИ
-# ============================================================
+
+# ============== УПРАВЛЕНИЕ PDF-ДОКУМЕНТАМИ ==============
 
 @app.route('/admin/documents')
 @admin_required
@@ -1033,7 +856,8 @@ def admin_add_document():
 
         safe_name = secure_filename(file.filename)
         filename = f"doc_{uuid.uuid4().hex}.pdf"
-
+        
+        # ✅ ИЗМЕНЕНО: путь для Amvera
         if "AMVERA" in os.environ:
             documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
             os.makedirs(documents_path, exist_ok=True)
@@ -1065,7 +889,8 @@ def admin_add_document():
 def admin_delete_document(id):
     update_last_activity()
     document = Document.query.get_or_404(id)
-
+    
+    # ✅ ИЗМЕНЕНО: удаление файла для обоих путей
     if "AMVERA" in os.environ:
         file_path = document.file_path.replace('/uploads/documents/', '')
         documents_path = os.path.join(os.path.expanduser("~"), "data", "uploads", "documents")
@@ -1088,6 +913,7 @@ def admin_delete_document(id):
     flash('Документ удалён!', 'success')
     return redirect(url_for('admin_documents'))
 
+
 @app.route('/uploads/documents/<path:filename>')
 def uploaded_document(filename):
     if "AMVERA" in os.environ:
@@ -1095,10 +921,7 @@ def uploaded_document(filename):
     else:
         documents_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents')
     return send_from_directory(documents_path, filename)
-
-# ============================================================
-# ПУБЛИЧНЫЕ МАРШРУТЫ
-# ============================================================
+# ============== ПУБЛИЧНЫЕ МАРШРУТЫ ==============
 
 @app.route('/')
 def home():
@@ -1123,7 +946,8 @@ def room_list():
         selected_category = RoomCategory.query.filter_by(slug=category_slug).first()
         if selected_category:
             query = query.filter_by(category_id=selected_category.id)
-
+    
+    # ✅ ИЗМЕНЕНО: сортировка по полю order, затем по цене
     rooms = query.order_by(Room.order.asc(), Room.price.asc()).all()
 
     categories = RoomCategory.query.all()
@@ -1526,21 +1350,25 @@ def api_rooms():
 # КАРТА САЙТА
 # ============================================================
 
+
 @app.route('/sitemap.xml')
 def sitemap():
     rooms = Room.query.filter_by(is_available=True).all()
-
+    
+    # Базовые страницы
     pages = [
         {'loc': '/', 'priority': '1.0'},
         {'loc': '/rooms', 'priority': '0.9'},
     ]
-
+    
+    # Добавить номера
     for room in rooms:
         pages.append({
             'loc': f'/room/{room.slug}',
             'priority': '0.8'
         })
-
+    
+    # Сгенерировать XML
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
 
@@ -1556,26 +1384,7 @@ def sitemap():
     xml += '</urlset>'
     return xml, 200, {'Content-Type': 'application/xml'}
 
-# ============================================================
-# ЗАГРУЗКА ФАЙЛОВ
-# ============================================================
-
-@app.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_PATH, filename)
-
-@app.context_processor
-def inject_models():
-    """Делает модели доступными во всех шаблонах"""
-    return {
-        'Document': Document,
-        'datetime': datetime,
-        'csrf_token': generate_csrf
-    }
-
-# ============================================================
-# ЗАПУСК
-# ============================================================
+# ============== ЗАПУСК ==============
 
 if __name__ == '__main__':
     with app.app_context():
