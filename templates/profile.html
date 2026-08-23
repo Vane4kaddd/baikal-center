@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет — Байкал-центр{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9">
+
+                <div class="profile-card" data-aos="fade-up">
+                    <div class="profile-grid-layout">
+
+                        <!-- ===== ЛЕВАЯ КОЛОНКА: ИНФОРМАЦИЯ ===== -->
+                        <div class="profile-col-info">
+                            <div class="profile-info-inner">
+
+                                <!-- Шапка -->
+                                <div class="profile-head">
+                                    <div class="profile-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="profile-name">
+                                        <h1>{{ user.name or 'Гость' }}</h1>
+                                        <span class="profile-role">Пользователь</span>
+                                    </div>
+                                </div>
+
+                                <!-- Данные (без статистики) -->
+                                <div class="profile-grid">
+                                    <div class="profile-item">
+                                        <span class="profile-item-label"><i class="fas fa-envelope"></i> Email</span>
+                                        <span class="profile-item-value">{{ user.email }}</span>
+                                        <span class="profile-item-badge verified"><i class="fas fa-check-circle"></i> Подтверждён</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-item-label"><i class="fas fa-phone"></i> Телефон</span>
+                                        <span class="profile-item-value">{{ user.phone }}</span>
+                                        <span class="profile-item-badge verified"><i class="fas fa-check-circle"></i> Подтверждён</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-item-label"><i class="fas fa-calendar-alt"></i> Регистрация</span>
+                                        <span class="profile-item-value">{{ user.created_at.strftime('%d.%m.%Y') if user.created_at else '—' }}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ===== ПРАВАЯ КОЛОНКА: КНОПКИ ===== -->
+                        <div class="profile-col-actions">
+                            <div class="profile-actions-inner">
+                                <h4 class="profile-actions-title">Действия</h4>
+                                <a href="{{ url_for('profile_bookings') }}" class="profile-action-btn">
+                                    <span class="action-icon"><i class="fas fa-calendar-check"></i></span>
+                                    <span class="action-text">Мои бронирования</span>
+                                    <span class="action-arrow"><i class="fas fa-chevron-right"></i></span>
+                                </a>
+                                <a href="{{ url_for('edit_profile') }}" class="profile-action-btn">
+                                    <span class="action-icon"><i class="fas fa-pen"></i></span>
+                                    <span class="action-text">Редактировать профиль</span>
+                                    <span class="action-arrow"><i class="fas fa-chevron-right"></i></span>
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <p class="profile-footer-text" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fas fa-lock" style="color: var(--gold); font-size: 0.7rem;"></i>
+                    Ваши данные защищены и хранятся в безопасности
+                </p>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* ===== СТИЛИ (без статистики) ===== */
+    .profile-section {
+        padding: 50px 0 60px;
+        background: linear-gradient(135deg, #f5f7f6 0%, #e8ece9 100%);
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 28px 32px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .profile-card:hover {
+        border-color: rgba(212, 175, 55, 0.2);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .profile-grid-layout {
+        display: grid;
+        grid-template-columns: 2.2fr 1fr;
+        gap: 32px;
+        align-items: stretch;
+    }
+
+    .profile-col-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .profile-info-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .profile-head {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .profile-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-dark);
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    .profile-name h1 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        font-size: 1.4rem;
+        color: var(--primary-dark);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .profile-role {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--gold);
+        font-weight: 500;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 20px;
+    }
+
+    .profile-item {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .profile-item-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray);
+        font-weight: 500;
+    }
+
+    .profile-item-label i {
+        color: var(--gold);
+        width: 14px;
+        font-size: 0.55rem;
+        margin-right: 3px;
+    }
+
+    .profile-item-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--dark);
+    }
+
+    .profile-item-badge {
+        font-size: 0.6rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        margin-top: 2px;
+        color: #2E7D32;
+    }
+
+    .profile-item-badge i {
+        font-size: 0.55rem;
+    }
+
+    /* ===== ПРАВАЯ КОЛОНКА: КНОПКИ (без изменений) ===== */
+    .profile-col-actions {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-left: 1px solid rgba(11, 59, 59, 0.06);
+        padding-left: 28px;
+    }
+
+    .profile-actions-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .profile-actions-title {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--gray);
+        margin: 0 0 4px 0;
+        opacity: 0.5;
+    }
+
+    .profile-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: transparent;
+        border: 1px solid rgba(212, 175, 55, 0.06);
+        text-decoration: none;
+        color: var(--primary-dark);
+        transition: all 0.25s ease;
+        cursor: pointer;
+    }
+
+    .profile-action-btn:hover {
+        background: rgba(212, 175, 55, 0.04);
+        border-color: rgba(212, 175, 55, 0.2);
+        text-decoration: none;
+        color: var(--primary-dark);
+    }
+
+    .profile-action-btn .action-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: rgba(212, 175, 55, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .profile-action-btn:hover .action-icon {
+        background: var(--gold);
+        color: var(--dark);
+    }
+
+    .profile-action-btn .action-text {
+        flex: 1;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .profile-action-btn .action-arrow {
+        color: var(--gray);
+        font-size: 0.65rem;
+        opacity: 0.3;
+        transition: transform 0.25s ease;
+    }
+
+    .profile-action-btn:hover .action-arrow {
+        transform: translateX(3px);
+        opacity: 0.8;
+        color: var(--gold);
+    }
+
+    .profile-footer-text {
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--gray);
+        margin-top: 16px;
+        opacity: 0.6;
+        letter-spacing: 0.3px;
+    }
+
+    /* ===== АДАПТИВНОСТЬ (без статистики, всё как было) ===== */
+    @media (max-width: 992px) {
+        .profile-grid-layout {
+            grid-template-columns: 1.8fr 1fr;
+            gap: 24px;
+        }
+        .profile-col-actions {
+            padding-left: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-section {
+            padding: 30px 0 40px;
+            min-height: calc(100vh - 160px);
+        }
+        .profile-card {
+            padding: 20px 18px 18px;
+            border-radius: 16px;
+        }
+        .profile-grid-layout {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .profile-col-actions {
+            border-left: none;
+            padding-left: 0;
+            border-top: 1px solid rgba(11, 59, 59, 0.06);
+            padding-top: 18px;
+            order: 2;
+        }
+        .profile-col-info {
+            order: 1;
+        }
+        .profile-actions-title {
+            font-size: 0.6rem;
+        }
+        .profile-action-btn {
+            padding: 10px 14px;
+            gap: 10px;
+        }
+        .profile-action-btn .action-text {
+            font-size: 0.85rem;
+        }
+        .profile-head {
+            gap: 12px;
+        }
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+        .profile-name h1 {
+            font-size: 1.2rem;
+        }
+        .profile-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+        .profile-item-value {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .profile-card {
+            padding: 16px 14px 14px;
+            border-radius: 14px;
+        }
+        .profile-grid-layout {
+            gap: 16px;
+        }
+        .profile-col-actions {
+            padding-top: 14px;
+        }
+        .profile-action-btn {
+            padding: 8px 12px;
+            gap: 8px;
+        }
+        .profile-action-btn .action-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+        }
+        .profile-action-btn .action-text {
+            font-size: 0.8rem;
+        }
+        .profile-head {
+            gap: 10px;
+        }
+        .profile-avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        .profile-name h1 {
+            font-size: 1rem;
+        }
+        .profile-role {
+            font-size: 0.55rem;
+        }
+        .profile-grid {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+        .profile-item {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(11, 59, 59, 0.04);
+        }
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+        .profile-item-label {
+            font-size: 0.55rem;
+        }
+        .profile-item-value {
+            font-size: 0.8rem;
+            text-align: right;
+        }
+        .profile-item-badge {
+            display: none;
+        }
+        .profile-footer-text {
+            font-size: 0.6rem;
+            margin-top: 12px;
+        }
+    }
+</style>
+{% endblock %}

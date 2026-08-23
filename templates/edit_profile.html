@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование профиля — Байкал-центр{% endblock %}
+
+{% block content %}
+<section class="edit-profile-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 col-11">
+                <div class="edit-profile-card" data-aos="fade-up">
+                    <!-- Заголовок -->
+                    <div class="edit-profile-header">
+                        <div class="edit-profile-icon">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <h1 class="edit-profile-title">Редактирование профиля</h1>
+                        <p class="edit-profile-subtitle">Обновите свои данные или смените пароль</p>
+                    </div>
+
+                    <!-- Форма -->
+                    <form method="POST" action="{{ url_for('edit_profile') }}" class="edit-profile-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="form-group">
+                            <label for="name"><i class="fas fa-user"></i> Имя</label>
+                            <input type="text" id="name" name="name" class="form-control" value="{{ user.name or '' }}" placeholder="Ваше имя" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" placeholder="example@mail.ru" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone"><i class="fas fa-phone"></i> Телефон</label>
+                            <input type="text" id="phone" name="phone" class="form-control" value="{{ user.phone }}" placeholder="+7 (999) 123-45-67" required>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="form-group">
+                            <label for="password"><i class="fas fa-lock"></i> Новый пароль (оставьте пустым, чтобы не менять)</label>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Введите новый пароль">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password_confirm"><i class="fas fa-check-circle"></i> Подтверждение пароля</label>
+                            <input type="password" id="password_confirm" name="password_confirm" class="form-control" placeholder="Повторите новый пароль">
+                        </div>
+
+                        <!-- ===== НОВЫЙ БЛОК КНОПОК ===== -->
+                        <div class="edit-profile-actions">
+                            <button type="submit" class="btn btn-gold">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            <a href="{{ url_for('profile') }}" class="btn-back">
+                                <i class="fas fa-arrow-left"></i> Назад
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .edit-profile-section {
+        padding: 50px 0 60px;
+        background: linear-gradient(135deg, #f5f7f6 0%, #e8ece9 100%);
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+    }
+
+    .edit-profile-card {
+        background: var(--white);
+        border-radius: 24px;
+        padding: 40px 36px 32px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .edit-profile-card:hover {
+        border-color: rgba(212, 175, 55, 0.2);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+    }
+
+    .edit-profile-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .edit-profile-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        color: var(--dark);
+        font-size: 1.6rem;
+    }
+
+    .edit-profile-title {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 700;
+        color: var(--primary-dark);
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+    }
+
+    .edit-profile-subtitle {
+        font-size: 0.9rem;
+        color: var(--gray);
+        margin-bottom: 0;
+    }
+
+    .edit-profile-form .form-group {
+        margin-bottom: 16px;
+    }
+
+    .edit-profile-form .form-group label {
+        font-weight: 500;
+        font-size: 0.85rem;
+        color: var(--primary-dark);
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .edit-profile-form .form-group label i {
+        color: var(--gold);
+        width: 18px;
+        margin-right: 4px;
+    }
+
+    .edit-profile-form .form-control {
+        border: 1.5px solid rgba(11, 59, 59, 0.08);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        width: 100%;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        background: #fafbfc;
+        color: var(--dark);
+    }
+
+    .edit-profile-form .form-control:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.06);
+        outline: none;
+        background: var(--white);
+    }
+
+    .edit-profile-form .form-control::placeholder {
+        color: #b0b8c0;
+        font-size: 0.85rem;
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid rgba(212, 175, 55, 0.1);
+        margin: 20px 0 22px;
+    }
+
+    /* ===== НОВЫЕ СТИЛИ ДЛЯ КНОПОК ===== */
+    .edit-profile-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+        border: none;
+        color: var(--dark);
+        font-weight: 600;
+        padding: 10px 24px;
+        border-radius: 50px;
+        transition: all 0.25s ease;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        flex: 1 1 auto;
+        justify-content: center;
+        min-width: 120px;
+    }
+
+    .btn-gold:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
+        color: var(--dark);
+    }
+
+    .btn-back {
+        background: transparent;
+        border: 1.5px solid rgba(11, 59, 59, 0.12);
+        color: var(--gray);
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+
+    .btn-back:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(212, 175, 55, 0.04);
+        text-decoration: none;
+    }
+
+    /* ===== АДАПТИВ ===== */
+    @media (max-width: 768px) {
+        .edit-profile-card {
+            padding: 24px 18px 20px;
+            border-radius: 20px;
+        }
+        .edit-profile-title {
+            font-size: 1.4rem;
+        }
+        .edit-profile-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 1.4rem;
+        }
+        .edit-profile-form .form-control {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .edit-profile-actions {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-gold {
+            width: 100%;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            min-width: unset;
+        }
+        .btn-back {
+            width: 100%;
+            justify-content: center;
+            padding: 10px 16px;
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .edit-profile-card {
+            padding: 18px 14px 16px;
+            border-radius: 16px;
+        }
+        .edit-profile-title {
+            font-size: 1.2rem;
+        }
+        .edit-profile-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+        .edit-profile-form .form-control {
+            font-size: 0.85rem;
+            padding: 7px 10px;
+            border-radius: 10px;
+        }
+        .btn-gold {
+            font-size: 0.85rem;
+            padding: 8px 14px;
+        }
+        .btn-back {
+            font-size: 0.8rem;
+            padding: 8px 14px;
+        }
+    }
+</style>
+{% endblock %}

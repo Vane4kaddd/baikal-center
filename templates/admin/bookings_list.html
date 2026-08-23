@@ -1,0 +1,608 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Управление бронированиями — Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== ОБЩИЕ СТИЛИ ===== */
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .page-header h1 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 700;
+        color: var(--primary-dark);
+        font-size: 1.8rem;
+        margin: 0;
+    }
+    
+    .page-header h1 i {
+        color: var(--gold);
+        margin-right: 8px;
+    }
+    
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .breadcrumb-item a {
+        color: var(--gray);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: var(--gold);
+    }
+    
+    .breadcrumb-item.active {
+        color: var(--primary-dark);
+        font-weight: 500;
+    }
+    
+    /* ===== СТАТИСТИКА ===== */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-item {
+        background: var(--white);
+        border-radius: 14px;
+        padding: 12px 14px;
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        text-align: center;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .stat-item:hover {
+        border-color: rgba(212, 175, 55, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+    
+    .stat-item .stat-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        line-height: 1.2;
+    }
+    
+    .stat-item .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray);
+        font-weight: 500;
+    }
+    
+    .stat-item .stat-icon {
+        display: inline-block;
+        margin-bottom: 2px;
+        font-size: 1.1rem;
+        color: var(--gold);
+    }
+    
+    .stat-item.pending .stat-value { color: #856404; }
+    .stat-item.confirmed .stat-value { color: #0c5460; }
+    .stat-item.cancelled .stat-value { color: #721c24; }
+    .stat-item.completed .stat-value { color: #155724; }
+    
+    /* ===== ФИЛЬТРЫ (КОМПАКТНЫЕ) ===== */
+    .filter-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 16px 20px;
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+        margin-bottom: 24px;
+    }
+    
+    .filter-card .filter-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-card .filter-row .filter-group {
+        flex: 1 1 200px;
+        min-width: 140px;
+    }
+    
+    .filter-card .form-label {
+        font-weight: 500;
+        font-size: 0.8rem;
+        color: var(--primary-dark);
+        margin-bottom: 2px;
+    }
+    
+    .filter-card .form-select {
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        border-radius: 10px;
+        padding: 6px 30px 6px 12px;
+        font-size: 0.85rem;
+        background-color: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        height: 38px;
+    }
+    
+    .filter-card .form-select:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+    }
+    
+    .btn-gold {
+        background: var(--gold);
+        border: none;
+        color: var(--dark);
+        font-weight: 600;
+        border-radius: 30px;
+        padding: 6px 20px;
+        font-size: 0.85rem;
+        transition: all 0.25s ease;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    
+    .btn-gold:hover {
+        background: var(--gold-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        color: var(--dark);
+    }
+    
+    .btn-gold-sm {
+        padding: 4px 14px;
+        font-size: 0.75rem;
+        height: 32px;
+        border-radius: 30px;
+    }
+    
+    .filter-stats {
+        font-size: 0.8rem;
+        color: var(--gray);
+        margin-left: auto;
+        white-space: nowrap;
+    }
+    
+    /* ===== КАРТОЧКИ БРОНИРОВАНИЙ ===== */
+    .bookings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 18px;
+    }
+    
+    .booking-card {
+        background: var(--white);
+        border-radius: 18px;
+        padding: 16px 18px 14px;
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        transition: border-color 0.3s, box-shadow 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .booking-card:hover {
+        border-color: rgba(212, 175, 55, 0.2);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    }
+    
+    .booking-card .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .booking-card .booking-id {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--primary-dark);
+    }
+    
+    .booking-card .booking-date {
+        font-size: 0.65rem;
+        color: var(--gray);
+    }
+    
+    .booking-card .booking-user {
+        margin-bottom: 6px;
+    }
+    
+    .booking-card .booking-user .name {
+        font-weight: 600;
+        color: var(--primary-dark);
+        font-size: 0.95rem;
+    }
+    
+    .booking-card .booking-user .contact {
+        font-size: 0.75rem;
+        color: var(--gray);
+        display: block;
+    }
+    
+    .booking-card .booking-room {
+        margin-bottom: 6px;
+    }
+    
+    .booking-card .booking-room .room-name {
+        font-weight: 500;
+        color: var(--primary-dark);
+        font-size: 0.9rem;
+    }
+    
+    .booking-card .booking-room .room-name a {
+        color: var(--primary-dark);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .booking-card .booking-room .room-name a:hover {
+        color: var(--gold);
+    }
+    
+    .booking-card .booking-room .room-category {
+        font-size: 0.7rem;
+        color: var(--gray);
+    }
+    
+    .booking-card .booking-dates {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--primary-dark);
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+    }
+    
+    .booking-card .booking-dates i {
+        color: var(--gold);
+        font-size: 0.75rem;
+    }
+    
+    .booking-card .booking-dates .nights {
+        background: #f1f3f5;
+        padding: 0 10px;
+        border-radius: 30px;
+        font-size: 0.65rem;
+        color: var(--gray);
+        line-height: 1.6;
+    }
+    
+    .booking-card .booking-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        font-size: 0.8rem;
+        color: var(--gray);
+        margin-bottom: 8px;
+    }
+    
+    .booking-card .booking-meta i {
+        color: var(--gold);
+        width: 14px;
+        margin-right: 2px;
+    }
+    
+    .booking-card .booking-price {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--primary-dark);
+    }
+    
+    .booking-card .booking-status {
+        margin: 6px 0 10px;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .status-badge i {
+        font-size: 0.65rem;
+    }
+    
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #d1ecf1; color: #0c5460; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-completed { background: #d4edda; color: #155724; }
+    
+    .booking-card .booking-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .booking-card .booking-actions .status-select {
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        border-radius: 8px;
+        padding: 2px 20px 2px 8px;
+        font-size: 0.7rem;
+        background-color: #fff;
+        transition: border-color 0.2s;
+        cursor: pointer;
+        flex: 1;
+        min-width: 90px;
+        height: 30px;
+    }
+    
+    .booking-card .booking-actions .status-select:focus {
+        border-color: var(--gold);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+    }
+    
+    /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background: var(--white);
+        border-radius: 18px;
+        border: 1px solid rgba(212, 175, 55, 0.08);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--gold);
+        opacity: 0.3;
+        margin-bottom: 12px;
+        display: block;
+    }
+    
+    .empty-state h4 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: var(--primary-dark);
+        font-size: 1.2rem;
+    }
+    
+    .empty-state p {
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+    
+    /* ===== АДАПТИВ ===== */
+    @media (max-width: 992px) {
+        .page-header h1 { font-size: 1.5rem; }
+        .stats-row { grid-template-columns: repeat(3, 1fr); }
+        .bookings-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    }
+    
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .filter-card .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .filter-card .filter-row .filter-group {
+            flex: 1 1 auto;
+            min-width: unset;
+        }
+        .filter-card .filter-row .filter-group .form-select {
+            width: 100%;
+        }
+        .btn-gold {
+            width: 100%;
+            justify-content: center;
+        }
+        .filter-stats {
+            text-align: center;
+            margin-left: 0;
+            margin-top: 4px;
+        }
+        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .stat-item { padding: 10px; }
+        .stat-item .stat-value { font-size: 1.1rem; }
+        .stat-item .stat-label { font-size: 0.6rem; }
+        .bookings-grid { grid-template-columns: 1fr; }
+        .booking-card { padding: 14px; }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+        .stat-item { padding: 8px; border-radius: 10px; }
+        .stat-item .stat-value { font-size: 0.95rem; }
+        .stat-item .stat-label { font-size: 0.55rem; }
+        .booking-card { padding: 12px; }
+        .booking-card .booking-dates { font-size: 0.8rem; }
+        .booking-card .booking-meta { font-size: 0.7rem; gap: 6px 12px; }
+        .booking-card .booking-price { font-size: 1rem; }
+        .status-badge { font-size: 0.6rem; padding: 2px 8px; }
+        .booking-actions { flex-direction: column; align-items: stretch; gap: 4px; }
+        .booking-actions .status-select { min-width: unset; }
+        .btn-gold-sm { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Заголовок -->
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-calendar-check"></i> Управление бронированиями</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_index') }}">Главная</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Бронирования</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <span class="badge" style="background: var(--gold); color: var(--dark); padding: 6px 14px; font-size: 0.8rem;">
+                <i class="fas fa-calendar-alt"></i> {{ now.strftime('%d.%m.%Y') }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-list"></i></div>
+            <div class="stat-value">{{ bookings|length }}</div>
+            <div class="stat-label">Всего</div>
+        </div>
+        <div class="stat-item pending">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-value">{{ bookings|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+            <div class="stat-label">Ожидают</div>
+        </div>
+        <div class="stat-item confirmed">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">{{ bookings|selectattr('status', 'equalto', 'confirmed')|list|length }}</div>
+            <div class="stat-label">Подтверждены</div>
+        </div>
+        <div class="stat-item completed">
+            <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+            <div class="stat-value">{{ bookings|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+            <div class="stat-label">Завершены</div>
+        </div>
+        <div class="stat-item cancelled">
+            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+            <div class="stat-value">{{ bookings|selectattr('status', 'equalto', 'cancelled')|list|length }}</div>
+            <div class="stat-label">Отменены</div>
+        </div>
+    </div>
+
+    <!-- Фильтры (компактные) -->
+    <div class="filter-card">
+        <form method="GET" action="{{ url_for('admin_bookings_list') }}" class="filter-row">
+            <div class="filter-group">
+                <label for="status_filter" class="form-label"><i class="fas fa-filter" style="color: var(--gold);"></i> Статус</label>
+                <select name="status" id="status_filter" class="form-select">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Все статусы</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Ожидает</option>
+                    <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Подтверждено</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Отменено</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Завершено</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-gold">
+                <i class="fas fa-search"></i> Применить
+            </button>
+            <div class="filter-stats">
+                <i class="fas fa-file-alt"></i> Найдено: <strong>{{ bookings|length }}</strong> записей
+            </div>
+        </form>
+    </div>
+
+    <!-- Карточки бронирований -->
+    {% if bookings %}
+        <div class="bookings-grid">
+            {% for booking in bookings %}
+                <div class="booking-card">
+                    <div class="card-header">
+                        <span class="booking-id">#{{ booking.id }}</span>
+                        <span class="booking-date">{{ booking.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                    </div>
+                    
+                    <div class="booking-user">
+                        <span class="name">{{ booking.user.name or 'Гость' }}</span>
+                        <span class="contact">{{ booking.user.email }}</span>
+                        <span class="contact">{{ booking.user.phone }}</span>
+                    </div>
+                    
+                    <div class="booking-room">
+                        <span class="room-name">
+                            <a href="{{ url_for('room_detail', slug=booking.room.slug) }}" target="_blank">
+                                {{ booking.room.name }}
+                            </a>
+                        </span>
+                        {% if booking.room.category %}
+                            <span class="room-category"> — {{ booking.room.category.name }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="booking-dates">
+                        <i class="fas fa-calendar-alt"></i>
+                        {{ booking.check_in.strftime('%d.%m.%Y') }}
+                        <i class="fas fa-arrow-right text-muted" style="font-size: 0.65rem;"></i>
+                        {{ booking.check_out.strftime('%d.%m.%Y') }}
+                        <span class="nights">{{ (booking.check_out - booking.check_in).days }} ночи</span>
+                    </div>
+                    
+                    <div class="booking-meta">
+                        <span><i class="fas fa-user"></i> {{ booking.guests|pluralize('гость', 'гостя', 'гостей') }}</span>
+                        <span class="booking-price">{{ booking.total_price|int }} ₽</span>
+                    </div>
+                    
+                    <div class="booking-status">
+                        <span class="status-badge status-{{ booking.status }}">
+                            {% if booking.status == 'pending' %}
+                                <i class="fas fa-clock"></i> Ожидает
+                            {% elif booking.status == 'confirmed' %}
+                                <i class="fas fa-check-circle"></i> Подтверждено
+                            {% elif booking.status == 'cancelled' %}
+                                <i class="fas fa-times-circle"></i> Отменено
+                            {% elif booking.status == 'completed' %}
+                                <i class="fas fa-check-double"></i> Завершено
+                            {% else %}
+                                {{ booking.status }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="booking-actions">
+                        <form method="POST" action="{{ url_for('admin_update_booking_status', id=booking.id) }}" class="d-flex gap-1 align-items-center flex-wrap w-100">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <select name="status" class="status-select">
+                                <option value="pending" {% if booking.status == 'pending' %}selected{% endif %}>Ожидает</option>
+                                <option value="confirmed" {% if booking.status == 'confirmed' %}selected{% endif %}>Подтвердить</option>
+                                <option value="cancelled" {% if booking.status == 'cancelled' %}selected{% endif %}>Отменить</option>
+                                <option value="completed" {% if booking.status == 'completed' %}selected{% endif %}>Завершить</option>
+                            </select>
+                            <button type="submit" class="btn btn-gold btn-gold-sm">
+                                <i class="fas fa-sync-alt"></i> Обновить
+                            </button>
+                        </form>
+
+                        <!-- Кнопка удаления (только для админа) -->
+                        <form method="POST" action="{{ url_for('admin_delete_booking', id=booking.id) }}" style="display:inline;" onsubmit="return confirm('Удалить бронирование #{{ booking.id }}? Это действие необратимо.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm" style="border-radius:30px; padding:4px 14px; font-size:0.7rem;">
+                                <i class="fas fa-trash-alt"></i> Удалить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h4>Нет бронирований</h4>
+            <p>Пока ни один пользователь не забронировал номер.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
