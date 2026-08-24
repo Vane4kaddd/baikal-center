@@ -1575,6 +1575,19 @@ def inject_models():
 def health():
     return "OK", 200
 
+@app.route('/debug/db')
+def debug_db():
+    from sqlalchemy import text
+    result = {}
+    with db.engine.connect() as conn:
+        for table in ['user', 'room', 'booking', 'room_category', 'gallery_photo']:
+            try:
+                count = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
+                result[table] = count
+            except Exception as e:
+                result[table] = f"error: {e}"
+    return f"<pre>{result}</pre>" 
+
 # ============================================================
 # СОЗДАНИЕ ТАБЛИЦ И ДИАГНОСТИКА (выполняется всегда)
 # ============================================================
