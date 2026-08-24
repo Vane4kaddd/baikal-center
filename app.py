@@ -31,6 +31,8 @@ app = Flask(__name__)
 # 🚀 НАСТРОЙКИ ДЛЯ AMVERA (ПОСТОЯННОЕ ХРАНИЛИЩЕ)
 # ============================================================
 import sys
+
+print("🚀 ПРИЛОЖЕНИЕ ЗАПУСКАЕТСЯ", file=sys.stderr)
 print(f"--- ДИАГНОСТИКА ---")
 print(f"Значение AMVERA: {os.environ.get('AMVERA')}")
 print(f"Значение DB_HOST: {os.environ.get('DB_HOST')}")
@@ -1571,10 +1573,13 @@ def inject_models():
         'datetime': datetime,
         'csrf_token': generate_csrf
     }
-
+@app.route('/health')
+def health():
+    return "OK", 200
 # ============================================================
 # СОЗДАНИЕ ТАБЛИЦ ПРИ СТАРТЕ (выполняется всегда)
 # ============================================================
+print("🔍 Начинаем создание таблиц...", file=sys.stderr)
 with app.app_context():
     try:
         db.create_all()
