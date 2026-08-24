@@ -12,11 +12,11 @@ import os
 import re
 import uuid
 import logging
+import sys
 from dotenv import load_dotenv
 from flask_wtf.csrf import generate_csrf
 from flask import send_from_directory
 from flask_login import UserMixin
-from flask_wtf.csrf import generate_csrf
 
 # Загружаем переменные из .env
 load_dotenv()
@@ -30,14 +30,13 @@ app = Flask(__name__)
 # ============================================================
 # 🚀 НАСТРОЙКИ ДЛЯ AMVERA (ПОСТОЯННОЕ ХРАНИЛИЩЕ)
 # ============================================================
-import sys
-
 print("🚀 ПРИЛОЖЕНИЕ ЗАПУСКАЕТСЯ", file=sys.stderr)
 print(f"--- ДИАГНОСТИКА ---")
 print(f"Значение AMVERA: {os.environ.get('AMVERA')}")
 print(f"Значение DB_HOST: {os.environ.get('DB_HOST')}")
 print(f"Все переменные (первые 5): {list(os.environ.keys())[:5]}")
 print(f"--- КОНЕЦ ДИАГНОСТИКИ ---")
+
 if "AMVERA" in os.environ:
     # На Amvera используем PostgreSQL
     INSTANCE_PATH = "/data/instance"
@@ -1390,10 +1389,8 @@ def admin_delete_booking(id):
 @login_required
 def delete_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
-    # Проверка, что бронирование принадлежит текущему пользователю
     if booking.user_id != current_user.id:
         abort(403)
-    # Разрешаем удалять только отменённые бронирования
     if booking.status != 'cancelled':
         flash('Можно удалить только отменённые бронирования.', 'warning')
         return redirect(url_for('profile_bookings'))
@@ -1573,17 +1570,38 @@ def inject_models():
         'datetime': datetime,
         'csrf_token': generate_csrf
     }
+
 @app.route('/health')
 def health():
     return "OK", 200
+
 # ============================================================
-# СОЗДАНИЕ ТАБЛИЦ ПРИ СТАРТЕ (выполняется всегда)
+# СОЗДАНИЕ ТАБЛИЦ И ДИАГНОСТИКА (выполняется всегда)
 # ============================================================
+
+print("🔍 Проверяем подключение к БД...", file=sys.stderr)
+try:
+    with app.app_context():
+        uri = app.config['SQLALCHEMY_DATABASE_URI']
+        # Маскируем пароль для безопасности
+        import re
+        masked_uri = re.sub(r':([^:]+)@', r':***@', uri)
+        print(f"   URI: {masked_uri}", file=sys.stderr)
+        # Пытаемся установить соединение
+        conn = db.engine.connect()
+        conn.close()
+        print("✅ Подключение к БД успешно", file=sys.stderr)
+except Exception as e:
+    print(f"❌ ОШИБКА подключения к БД: {e}", file=sys.stderr)
+    import traceback
+    traceback.print_exc()
+    # Не прерываем выполнение – ошибка будет видна в логах
+
 print("🔍 Начинаем создание таблиц...", file=sys.stderr)
 with app.app_context():
     try:
         db.create_all()
-        print("✅ Таблицы созданы (или уже существуют)")
+        print("✅ Таблицы созданы (или уже существуют)", file=sys.stderr)
         if not Contact.query.first():
             contact = Contact(
                 name="Байкал-центр",
@@ -1593,10 +1611,10 @@ with app.app_context():
             )
             db.session.add(contact)
             db.session.commit()
-            print("✅ Контакт добавлен")
-        print("✅ База данных готова!")
+            print("✅ Контакт добавлен", file=sys.stderr)
+        print("✅ База данных готова!", file=sys.stderr)
     except Exception as e:
-        print(f"❌ ОШИБКА при инициализации БД: {e}")
+        print(f"❌ ОШИБКА при инициализации БД: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
 
@@ -1605,9 +1623,8 @@ with app.app_context():
 # ============================================================
 if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
-    print("🏔️ Байкал-центр запущен!")
-    print("📍 http://127.0.0.1:5000")
-    print("🔧 http://127.0.0.1:5000/admin")
+    print("🏔️ Байкал-центр запущен!", file=sys.stderr)
+    print("📍 http://127.0.0.1:5000", file=sys.stderr)
+    print("🔧 http://127.0.0.1:5000/admin", file=sys.stderr)
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
-
