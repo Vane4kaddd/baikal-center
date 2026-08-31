@@ -1605,12 +1605,7 @@
                 <li role="none"><a class="nav-link" href="{{ url_for('home') }}#gallery" role="menuitem">Галерея</a></li>
                 <li role="none"><a class="nav-link" href="{{ url_for('home') }}#contacts" role="menuitem">Контакты</a></li>
 
-                {% if current_user.is_authenticated %}
-                    <li role="none"><a class="btn-auth" href="{{ url_for('profile') }}" role="menuitem">Профиль</a></li>
-                    <li role="none"><a class="btn-auth-danger" href="{{ url_for('logout') }}" role="menuitem">Выход</a></li>
-                {% else %}
-                    <li role="none"><a class="btn-auth" href="{{ url_for('login') }}" role="menuitem">Войти</a></li>
-                {% endif %}
+                
             </ul>
 
             <!-- Кнопка бургер-меню (только для мобильных) -->
