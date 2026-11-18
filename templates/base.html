@@ -1,0 +1,1944 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta name="yandex-verification" content="d4b14d020e5440dd" />
+    <meta name="google-site-verification" content="tL09pAf7P2wBeq2f_YLZkX7sIjzwsAXlXmHmGsi8knU" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="theme-color" content="#1A1A1A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="База отдыха в Горячинске на Байкале. Комфортабельные номера от стандарта до люкса.">
+    
+    <!-- ✅ БЕЗОПАСНОСТЬ -->
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    
+    <title>{% block title %}Байкал-центр — Отдых на Байкале{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <meta name="msapplication-TileColor" content="#0B3B3B">
+    <meta name="theme-color" content="#0B3B3B">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        /* ===== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ===== */
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #F5E6B8;
+            --gold-dark: #996515;
+            --dark: #1A1A1A;
+            --dark-light: #2C2C2C;
+            --light: #F8F9FA;
+            --white: #FFFFFF;
+            --header-height: 70px;
+            --header-height-desktop: 90px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--dark);
+            background: var(--white);
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+            padding-top: var(--header-height);
+        }
+        
+        body.menu-open {
+            overflow: hidden;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        
+        .container {
+            overflow-x: hidden;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        
+        .row {
+            margin-left: -10px;
+            margin-right: -10px;
+        }
+        
+        [class*="col-"] {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        /* ===== НАВИГАЦИЯ ===== */
+        .navbar {
+            background: rgba(26, 26, 26, 0.98);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 0.8rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            min-height: var(--header-height);
+        }
+        
+        .navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow-x: visible;
+            flex-wrap: nowrap;
+        }
+        
+        .navbar-brand {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: var(--gold) !important;
+            text-decoration: none;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .navbar-brand span {
+            color: var(--white);
+            font-size: 1.4rem;
+            font-weight: 300;
+        }
+        
+        /* Десктопное меню */
+        .desktop-menu {
+            display: none;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .desktop-menu li {
+            display: inline-block;
+        }
+        
+        .desktop-menu .nav-link {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 0.5rem 0.8rem;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .desktop-menu .nav-link:hover,
+        .desktop-menu .nav-link:focus {
+            color: var(--gold) !important;
+        }
+        
+        .desktop-menu .nav-link.active {
+            color: var(--gold) !important;
+        }
+        
+        /* ===== КНОПКА "ВОЙТИ" (ЗОЛОТОЙ ГРАДИЕНТ) ===== */
+        .btn-auth {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+            background-size: 200% 200%;
+            color: var(--dark) !important;
+            border: none;
+            padding: 0.5rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+            animation: goldShimmer 3s ease infinite;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+        }
+        
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.35);
+            color: var(--dark) !important;
+            text-decoration: none;
+        }
+        
+        /* Анимация золотого свечения */
+        @keyframes goldShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Адаптация для средних экранов (992–1200px) */
+        @media (min-width: 992px) and (max-width: 1200px) {
+            .desktop-menu .nav-link {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.5rem;
+                letter-spacing: 1px;
+            }
+            .btn-auth {
+                padding: 0.4rem 1rem;
+                font-size: 0.75rem;
+            }
+            .navbar-brand {
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* Кнопка бургер-меню (только телефон) */
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: transparent;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1003;
+            flex-shrink: 0;
+        }
+        
+        .menu-toggle:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 22px;
+            height: 18px;
+        }
+        
+        .menu-icon span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--gold);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-toggle.active .menu-icon span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        
+        .menu-toggle.active .menu-icon span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .menu-toggle.active .menu-icon span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        /* Круговое меню сверху (мобильное) */
+        .circle-menu-top {
+            position: fixed;
+            top: calc(var(--header-height) + 10px);
+            right: 20px;
+            z-index: 1002;
+            display: none;
+            max-height: calc(100vh - var(--header-height) - 30px);
+            overflow-y: auto;
+        }
+        
+        .circle-menu-top.active {
+            display: block;
+        }
+        
+        .circle-menu-top .circle-menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .circle-menu-top.active .circle-menu-items {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        
+        .circle-menu-top .circle-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--dark);
+            border: 1.5px solid var(--gold);
+            border-radius: 50px;
+            padding: 12px 20px;
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .circle-menu-top .circle-menu-item i {
+            width: 20px;
+            color: var(--gold);
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .circle-menu-top .circle-menu-item:hover,
+        .circle-menu-top .circle-menu-item:focus {
+            background: var(--gold);
+            color: var(--dark);
+            transform: translateX(-5px);
+        }
+        
+        .circle-menu-top .circle-menu-item:hover i,
+        .circle-menu-top .circle-menu-item:focus i {
+            color: var(--dark);
+        }
+        
+        /* Кнопка "Войти" в мобильном меню */
+        .circle-menu-item-auth {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%) !important;
+            color: var(--dark) !important;
+            border-color: var(--gold) !important;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+        }
+        
+        .circle-menu-item-auth i {
+            color: var(--dark) !important;
+        }
+        
+        .circle-menu-item-auth:hover {
+            background: var(--dark) !important;
+            color: var(--gold) !important;
+            transform: translateX(-5px);
+        }
+        
+        .circle-menu-item-auth:hover i {
+            color: var(--gold) !important;
+        }
+        
+        /* Оверлей для мобильного меню */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            z-index: 1001;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .menu-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        @media (max-width: 991px) {
+            .desktop-menu {
+                display: none !important;
+            }
+            .menu-toggle {
+                display: flex !important;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .desktop-menu {
+                display: flex !important;
+            }
+            .menu-toggle {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .menu-toggle {
+                width: 44px;
+                height: 44px;
+            }
+            .circle-menu-top {
+                right: 12px;
+                top: calc(var(--header-height) + 8px);
+            }
+            .circle-menu-top .circle-menu-item {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+                gap: 10px;
+            }
+            .circle-menu-top .circle-menu-item i {
+                font-size: 1rem;
+                width: 18px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .circle-menu-top .circle-menu-item {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                gap: 8px;
+            }
+            .circle-menu-top .circle-menu-item i {
+                font-size: 0.85rem;
+                width: 16px;
+            }
+        }
+        
+        /* ========== HERO СЕКЦИЯ ========== */
+        .hero {
+            position: relative;
+            height: calc(100vh - var(--header-height));
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            margin-top: calc(-1 * var(--header-height));
+            width: 100%;
+        }
+        
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26,26,26,0.95) 0%, rgba(26,26,26,0.6) 100%);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: var(--white);
+            padding: 2rem 0;
+            width: 100%;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--gold);
+            margin-bottom: 1rem;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            word-wrap: break-word;
+        }
+        
+        .hero-title span {
+            color: var(--gold);
+            font-style: italic;
+        }
+        
+        .hero-text {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .hero-buttons .btn {
+            width: 100%;
+            text-align: center;
+            margin-right: 0;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        
+        /* Адаптивность Hero */
+        @media (min-width: 768px) {
+            body {
+                padding-top: var(--header-height-desktop);
+            }
+            .navbar {
+                padding: 1rem 0;
+                min-height: var(--header-height-desktop);
+            }
+            .navbar-brand {
+                font-size: 1.8rem;
+            }
+            .navbar-brand span {
+                font-size: 1.6rem;
+            }
+            .hero {
+                height: calc(100vh - var(--header-height-desktop));
+                min-height: 600px;
+                margin-top: calc(-1 * var(--header-height-desktop));
+            }
+            .hero-title {
+                font-size: 3.5rem;
+            }
+            .hero-subtitle {
+                font-size: 0.9rem;
+                letter-spacing: 6px;
+            }
+            .hero-buttons {
+                flex-direction: row;
+            }
+            .hero-buttons .btn {
+                width: auto;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .hero-title {
+                font-size: 5rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 420px;
+                height: auto;
+                padding: 80px 0 60px;
+            }
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-text {
+                font-size: 0.9rem;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .hero-buttons .btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px 20px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero {
+                min-height: 350px;
+                padding: 60px 0 40px;
+            }
+            .hero-title {
+                font-size: 1.6rem;
+            }
+            .hero-text {
+                font-size: 0.85rem;
+            }
+            .hero-subtitle {
+                font-size: 0.7rem;
+                letter-spacing: 3px;
+            }
+            .hero-buttons .btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .hero {
+                min-height: 300px;
+                padding: 50px 0 30px;
+            }
+            .hero-title {
+                font-size: 1.3rem;
+            }
+            .hero-text {
+                font-size: 0.75rem;
+            }
+            .hero-buttons .btn {
+                padding: 8px 14px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* ========== СЕКЦИИ ========== */
+        .about-section,
+        .rooms-section,
+        .features-section,
+        .gallery-section {
+            padding: 50px 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            .about-section,
+            .rooms-section,
+            .features-section,
+            .gallery-section {
+                padding: 80px 0;
+            }
+            .section-title {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .section-title {
+                font-size: 3.5rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .about-section,
+            .rooms-section,
+            .features-section,
+            .gallery-section {
+                padding: 40px 0;
+            }
+            .section-title {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .about-section,
+            .rooms-section,
+            .features-section,
+            .gallery-section {
+                padding: 30px 0;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .section-title {
+                font-size: 1.3rem;
+            }
+        }
+        
+        .section-subtitle {
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        @media (max-width: 480px) {
+            .section-subtitle {
+                font-size: 0.7rem;
+                letter-spacing: 2px;
+            }
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            word-wrap: break-word;
+        }
+        
+        .gold-line {
+            width: 50px;
+            height: 2px;
+            background: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+        
+        .gold-line.mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* ========== КАРТОЧКИ НОМЕРОВ ========== */
+        .room-card {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            height: 380px;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .room-card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s;
+        }
+        
+        .room-card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(26,26,26,0.95) 0%, rgba(26,26,26,0.7) 60%, transparent 100%);
+            padding: 25px 20px 20px;
+        }
+        
+        .room-card-category {
+            color: var(--gold);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        
+        .room-card-title {
+            color: var(--white);
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+        
+        .room-card-price {
+            color: var(--gold);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .room-card-price small {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+        
+        .room-card-details {
+            margin-top: 15px;
+        }
+        
+        .room-feature {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.8rem;
+            margin-right: 15px;
+            display: inline-block;
+        }
+        
+        .room-feature i {
+            color: var(--gold);
+            margin-right: 5px;
+        }
+        
+        @media (min-width: 768px) {
+            .room-card {
+                height: 420px;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .room-card {
+                height: 500px;
+            }
+            .room-card-overlay {
+                transform: translateY(60px);
+                transition: transform 0.5s;
+            }
+            .room-card:hover .room-card-overlay {
+                transform: translateY(0);
+            }
+            .room-card-details {
+                opacity: 0;
+                transform: translateY(20px);
+                transition: all 0.5s 0.1s;
+            }
+            .room-card:hover .room-card-details {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .room-card:hover .room-card-image {
+                transform: scale(1.1);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .room-card {
+                height: 320px;
+            }
+            .room-card-overlay {
+                padding: 18px 16px 16px;
+            }
+            .room-card-title {
+                font-size: 1.2rem;
+            }
+            .room-card-price {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .room-card {
+                height: 280px;
+            }
+            .room-card-overlay {
+                padding: 14px 12px 12px;
+            }
+            .room-card-title {
+                font-size: 1rem;
+            }
+            .room-card-price {
+                font-size: 0.9rem;
+            }
+            .room-card-category {
+                font-size: 0.6rem;
+            }
+            .room-feature {
+                font-size: 0.7rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .room-card {
+                height: 240px;
+            }
+            .room-card-title {
+                font-size: 0.9rem;
+            }
+            .room-card-price {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* ========== ПРЕИМУЩЕСТВА ========== */
+        .features-section {
+            background: var(--dark);
+            color: var(--white);
+        }
+        
+        .features-section .section-title {
+            color: var(--white);
+        }
+        
+        .feature-item {
+            text-align: center;
+            padding: 25px 15px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        @media (min-width: 992px) {
+            .feature-item:hover {
+                border-color: var(--gold);
+                transform: translateY(-10px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .feature-item {
+                padding: 20px 12px;
+                margin-bottom: 16px;
+            }
+            .feature-icon {
+                font-size: 1.8rem;
+            }
+            .feature-title {
+                font-size: 1rem;
+            }
+            .feature-item p {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .feature-item {
+                padding: 16px 10px;
+                margin-bottom: 12px;
+            }
+            .feature-icon {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            .feature-title {
+                font-size: 0.9rem;
+                margin-bottom: 6px;
+            }
+            .feature-item p {
+                font-size: 0.75rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .feature-item {
+                padding: 12px 8px;
+            }
+            .feature-icon {
+                font-size: 1.3rem;
+            }
+            .feature-title {
+                font-size: 0.8rem;
+            }
+            .feature-item p {
+                font-size: 0.7rem;
+            }
+        }
+        
+        .feature-icon {
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--gold);
+        }
+        
+        .feature-item p {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+            word-wrap: break-word;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* ========== ГАЛЕРЕЯ ========== */
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            height: 220px;
+            margin-bottom: 20px;
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s;
+        }
+        
+        @media (min-width: 992px) {
+            .gallery-item:hover img {
+                transform: scale(1.1);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .gallery-item {
+                height: 180px;
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery-item {
+                height: 150px;
+                margin-bottom: 12px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .gallery-item {
+                height: 120px;
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* ========== ФУТЕР ========== */
+        .footer {
+            background: var(--dark);
+            color: var(--white);
+            padding: 50px 0 30px;
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        
+        .footer-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .footer-text {
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .footer-title {
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        
+        .footer-contact {
+            list-style: none;
+            padding: 0;
+            text-align: center;
+        }
+        
+        .footer-contact li {
+            margin-bottom: 12px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            word-wrap: break-word;
+        }
+        
+        .footer-contact i {
+            color: var(--gold);
+            margin-right: 8px;
+            width: 18px;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        @media (min-width: 992px) {
+            .social-link:hover {
+                background: var(--gold);
+                color: var(--dark);
+                transform: translateY(-5px);
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .footer-logo,
+            .footer-text,
+            .footer-title,
+            .footer-contact {
+                text-align: left;
+            }
+            .social-links {
+                justify-content: flex-start;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .footer {
+                padding: 40px 0 20px;
+            }
+            .footer-logo {
+                font-size: 1.5rem;
+            }
+            .footer-text {
+                font-size: 0.8rem;
+            }
+            .footer-title {
+                font-size: 1rem;
+                margin-bottom: 14px;
+            }
+            .footer-contact li {
+                font-size: 0.85rem;
+            }
+            .social-link {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .footer {
+                padding: 30px 0 15px;
+            }
+            .footer-logo {
+                font-size: 1.3rem;
+            }
+            .footer-text {
+                font-size: 0.75rem;
+            }
+            .footer-title {
+                font-size: 0.9rem;
+            }
+            .footer-contact li {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* ========== СЕРТИФИКАТЫ ========== */
+        .certificates-block {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .certificates-note {
+            width: 100%;
+        }
+
+        @media (max-width: 767px) {
+            .certificates-block {
+                justify-content: center;
+            }
+            .certificates-note {
+                text-align: center;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .certificates-block {
+                justify-content: flex-end;
+            }
+            .certificates-note {
+                text-align: right;
+            }
+        }
+
+        .certificate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(212, 175, 55, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50px;
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .certificate-btn:hover {
+            background: var(--gold);
+            color: var(--dark);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
+        }
+
+        .certificate-btn i {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .certificate-btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+            .certificate-btn i {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .certificate-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                gap: 6px;
+            }
+            .certificate-btn i {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ========== МОДАЛЬНОЕ ОКНО PDF ========== */
+        #pdfModal .modal-content {
+            background: var(--dark);
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+        }
+
+        #pdfModal .modal-header {
+            border-bottom: 1px solid var(--gold);
+            padding: 15px 20px;
+        }
+
+        #pdfModal .modal-title {
+            color: var(--gold);
+        }
+
+        #pdfModal .modal-body {
+            height: 80vh;
+            padding: 0;
+        }
+
+        #pdfModal .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 0 0 14px 14px;
+        }
+
+        @media (max-width: 768px) {
+            #pdfModal .modal-dialog {
+                margin: 10px;
+            }
+            #pdfModal .modal-body {
+                height: 70vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #pdfModal .modal-body {
+                height: 60vh;
+            }
+            #pdfModal .modal-content {
+                border-radius: 12px;
+            }
+        }
+        
+        /* ========== КНОПКА НАВЕРХ ========== */
+        .scroll-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: var(--gold);
+            color: var(--dark);
+            border: none;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 997;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .scroll-top:hover,
+        .scroll-top:active {
+            background: var(--gold-dark);
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-top {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                bottom: 16px;
+                right: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .scroll-top {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+                bottom: 12px;
+                right: 12px;
+            }
+        }
+        
+        .carousel-arrow {
+            position: relative;
+            z-index: 50 !important;
+            pointer-events: auto !important;
+        }
+        
+        @media (hover: none) {
+            .room-card-overlay {
+                transform: translateY(0) !important;
+            }
+            .room-card-details {
+                opacity: 1 !important;
+                transform: translateY(0) !important;
+            }
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        iframe,
+        video {
+            max-width: 100%;
+        }
+        
+        /* ========== ДОПОЛНИТЕЛЬНАЯ АДАПТИВНОСТЬ ========== */
+        @media (max-width: 992px) {
+            .sticky-top {
+                position: relative !important;
+                top: 0 !important;
+                max-width: 100% !important;
+                margin-top: 30px;
+            }
+        }
+        
+        /* ========== АДАПТИВНЫЕ КОЛОНКИ ДЛЯ КАРТОЧЕК ========== */
+        @media (max-width: 1200px) {
+            .rooms-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .rooms-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 16px !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .rooms-grid {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
+            }
+        }
+        
+        /* ========== АДАПТИВНЫЕ ОТСТУПЫ ========== */
+        @media (max-width: 480px) {
+            .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .row {
+                margin-left: -6px;
+                margin-right: -6px;
+            }
+            [class*="col-"] {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .container {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+            .row {
+                margin-left: -4px;
+                margin-right: -4px;
+            }
+            [class*="col-"] {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+        }
+
+        /* ===== КАСТОМНЫЙ ДИЗАЙН ДЛЯ TOASTR ===== */
+        /* ===== НОВЫЙ СТИЛЬ ДЛЯ TOASTR (СВЕТЛЫЙ, ЭЛЕГАНТНЫЙ) ===== */
+        .toast {
+            border-radius: 20px !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+            padding: 18px 22px !important;
+            font-family: 'Montserrat', sans-serif !important;
+            font-size: 0.95rem !important;
+            border-left: 6px solid var(--gold) !important;
+            background: var(--white) !important;
+            color: var(--dark) !important;
+            opacity: 1 !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(212, 175, 55, 0.15) !important;
+        }
+
+        /* Общие иконки (добавим свои) */
+        .toast:before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            border-radius: 20px 0 0 20px;
+        }
+
+        /* Успех – зелёный акцент */
+        .toast-success {
+            border-left-color: #2E7D32 !important;
+            background: #F1F8F0 !important;
+        }
+        .toast-success .toast-title {
+            color: #1B5E20 !important;
+        }
+        .toast-success .toast-message {
+            color: #2E5D2E !important;
+        }
+        .toast-success .toast-close-button {
+            color: #2E7D32 !important;
+        }
+
+        /* Ошибка – красный акцент */
+        .toast-error {
+            border-left-color: #C62828 !important;
+            background: #FDF0F0 !important;
+        }
+        .toast-error .toast-title {
+            color: #B71C1C !important;
+        }
+        .toast-error .toast-message {
+            color: #7F2D2D !important;
+        }
+        .toast-error .toast-close-button {
+            color: #C62828 !important;
+        }
+
+        /* Предупреждение – золотой/оранжевый акцент */
+        .toast-warning {
+            border-left-color: #F9A825 !important;
+            background: #FFF8E1 !important;
+        }
+        .toast-warning .toast-title {
+            color: #E65100 !important;
+        }
+        .toast-warning .toast-message {
+            color: #6D4C00 !important;
+        }
+        .toast-warning .toast-close-button {
+            color: #F9A825 !important;
+        }
+
+        /* Информация – синий акцент */
+        .toast-info {
+            border-left-color: #1565C0 !important;
+            background: #E3F2FD !important;
+        }
+        .toast-info .toast-title {
+            color: #0D47A1 !important;
+        }
+        .toast-info .toast-message {
+            color: #1A3A5C !important;
+        }
+        .toast-info .toast-close-button {
+            color: #1565C0 !important;
+        }
+
+        .toast-title {
+            font-weight: 700 !important;
+            font-family: 'Cormorant Garamond', serif !important;
+            font-size: 1.2rem !important;
+            margin-bottom: 4px !important;
+            letter-spacing: -0.01em !important;
+        }
+
+        .toast-message {
+            font-size: 0.9rem !important;
+            opacity: 0.85 !important;
+            line-height: 1.4 !important;
+            font-weight: 400 !important;
+        }
+
+        .toast-close-button {
+            color: var(--dark) !important;
+            opacity: 0.3 !important;
+            font-size: 1.2rem !important;
+            transition: opacity 0.2s, transform 0.2s !important;
+            padding: 0 4px !important;
+        }
+        .toast-close-button:hover {
+            opacity: 1 !important;
+            transform: scale(1.1) !important;
+        }
+
+        .toast-progress {
+            background: var(--gold) !important;
+            height: 3px !important;
+            border-radius: 0 0 20px 20px !important;
+            opacity: 0.6 !important;
+        }
+
+        /* Адаптив для мобильных */
+        @media (max-width: 576px) {
+            .toast {
+                border-radius: 16px !important;
+                padding: 14px 16px !important;
+                font-size: 0.85rem !important;
+                border-left-width: 4px !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+            }
+            .toast-title {
+                font-size: 1rem !important;
+            }
+            .toast-message {
+                font-size: 0.8rem !important;
+            }
+            .toast-close-button {
+                font-size: 1rem !important;
+            }
+        }
+        /* ===== КРАСНАЯ КНОПКА ВЫХОДА ===== */
+        .btn-auth-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c62828 100%);
+            color: #fff !important;
+            border: none;
+            padding: 0.5rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+        }
+
+        .btn-auth-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(220, 53, 69, 0.35);
+            color: #fff !important;
+            text-decoration: none;
+            background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+        }
+
+        /* Для мобильного меню – красная кнопка */
+        .circle-menu-item-auth-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c62828 100%) !important;
+            color: #fff !important;
+            border-color: #dc3545 !important;
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.25) !important;
+        }
+
+        .circle-menu-item-auth-danger i {
+            color: #fff !important;
+        }
+
+        .circle-menu-item-auth-danger:hover {
+            background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%) !important;
+            color: #fff !important;
+            transform: translateX(-5px);
+        }
+
+        .circle-menu-item-auth-danger:hover i {
+            color: #fff !important;
+        }
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
+        }
+    </style>
+
+<!-- Toastr CSS (для красивых уведомлений) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- ========== НАВИГАЦИЯ ========== -->
+    <nav class="navbar" role="navigation" aria-label="Главное меню">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}" aria-label="На главную">
+                <i class="fas fa-mountain"></i> БАЙКАЛ<span>-ЦЕНТР</span>
+            </a>
+
+            <!-- Десктопное меню (≥992px) -->
+            <ul class="desktop-menu" role="menubar">
+                <li role="none"><a class="nav-link" href="{{ url_for('home') }}" role="menuitem">Главная</a></li>
+                <li role="none"><a class="nav-link" href="{{ url_for('room_list') }}" role="menuitem">Номера</a></li>
+                <li role="none"><a class="nav-link" href="{{ url_for('home') }}#about" role="menuitem">О базе</a></li>
+                <li role="none"><a class="nav-link" href="{{ url_for('home') }}#gallery" role="menuitem">Галерея</a></li>
+                <li role="none"><a class="nav-link" href="{{ url_for('home') }}#contacts" role="menuitem">Контакты</a></li>
+
+                {% if booking_enabled %}
+                {% if current_user.is_authenticated %}
+                    <li role="none"><a class="btn-auth" href="{{ url_for('profile') }}" role="menuitem">Профиль</a></li>
+                    <li role="none"><a class="btn-auth-danger" href="{{ url_for('logout') }}" role="menuitem">Выход</a></li>
+                {% else %}
+                    <li role="none"><a class="btn-auth" href="{{ url_for('login') }}" role="menuitem">Войти</a></li>
+                {% endif %}
+                {% endif %}
+            </ul>
+
+            <!-- Кнопка бургер-меню (только для мобильных) -->
+            <button class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobileMenu">
+                <span class="menu-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Оверлей для мобильного меню -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Мобильное меню (круговое) -->
+    <div class="circle-menu-top" id="mobileMenu" role="dialog" aria-label="Мобильное меню">
+        <div class="circle-menu-items">
+            <a href="{{ url_for('home') }}" class="circle-menu-item">
+                <i class="fas fa-home"></i> Главная
+            </a>
+            <a href="{{ url_for('room_list') }}" class="circle-menu-item">
+                <i class="fas fa-bed"></i> Номера
+            </a>
+            <a href="{{ url_for('home') }}#about" class="circle-menu-item">
+                <i class="fas fa-info-circle"></i> О базе
+            </a>
+            <a href="{{ url_for('home') }}#gallery" class="circle-menu-item">
+                <i class="fas fa-images"></i> Галерея
+            </a>
+            <a href="{{ url_for('home') }}#contacts" class="circle-menu-item">
+                <i class="fas fa-phone"></i> Контакты
+            </a>
+
+            {% if booking_enabled %}
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('profile') }}" class="circle-menu-item circle-menu-item-auth">
+                    <i class="fas fa-user-circle"></i> Профиль
+                </a>
+                <a href="{{ url_for('logout') }}" class="circle-menu-item circle-menu-item-auth-danger">
+                    <i class="fas fa-sign-out-alt"></i> Выход
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="circle-menu-item circle-menu-item-auth">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </a>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========== ОСНОВНЫЙ КОНТЕНТ ========== -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ========== ФУТЕР ========== -->
+    <footer class="footer" id="contacts">
+        <div class="container">
+            <div class="row">
+                <!-- Логотип -->
+                <div class="col-md-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-mountain"></i> БАЙКАЛ - ЦЕНТР
+                    </div>
+                    <p class="footer-text">База отдыха в центре села Горячинск на берегу Байкала. Комфортабельные номера от Стандарта до Джуниор сюита, термальный источник в шаговой доступности и сибирское гостеприимство.</p>
+                </div>
+                
+                <!-- Контакты -->
+                <div class="col-md-3 mb-4">
+                    <h4 class="footer-title">Контакты</h4>
+                    <ul class="footer-contact">
+                        <li><i class="fas fa-map-marker-alt"></i> Республика Бурятия, Прибайкальский р-н, с. Горячинск, ул. Октябрьская, 15Б</li>
+                        <li><i class="fas fa-phone"></i> <a href="tel:+79243533264" style="color: rgba(255,255,255,0.7); text-decoration: none;" aria-label="Позвонить по номеру +7 924 352-32-64">+7 (924) 352-32-64</a></li>
+                        <li><i class="fas fa-mobile-alt"></i> <a href="tel:+79246539750" style="color: rgba(255,255,255,0.7); text-decoration: none;" aria-label="Позвонить по номеру +7 924 653-97-50">+7 (924) 653-97-50</a></li>
+                        <li>
+                            <i class="fas fa-envelope"></i> 
+                            <a href="mailto:danata2009@yandex.ru" style="color: rgba(255,255,255,0.7); text-decoration: none;" aria-label="Написать на почту danata2009@yandex.ru">
+                                danata2009@yandex.ru
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Лицензии и сертификаты (БЕЗОПАСНАЯ ВЕРСИЯ) -->
+                <div class="col-md-5 mb-4">
+                    <h4 class="footer-title">Лицензии и сертификаты</h4>
+                    <ul class="footer-contact">
+                        <li style="margin-bottom: 15px; font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+                            <i class="fas fa-shield-alt" style="color: var(--gold);"></i>
+                            {% set docs_list = Document.query.filter_by(is_published=True).order_by(Document.order).all() %}
+                            {% if docs_list %}
+                            <a href="#" data-pdf="{{ document_url(docs_list[0]) | e }}" data-title="{{ docs_list[0].title | e }}" class="pdf-link" style="color: rgba(255,255,255,0.5); text-decoration: none; cursor: pointer; transition: color 0.3s;" onmouseover="this.style.color='var(--gold)';" onmouseout="this.style.color='rgba(255,255,255,0.5)';" aria-label="Открыть документ {{ docs_list[0].title | e }}">
+                                Официально внесены в реестр средств размещения РФ
+                            </a>
+                            {% else %}
+                            Официально внесены в реестр средств размещения РФ
+                            {% endif %}
+                        </li>
+                        
+                        {% set docs = Document.query.filter_by(is_published=True).order_by(Document.order).all() %}
+                        {% for doc in docs %}
+                        <li>
+                            <i class="fas fa-file-pdf" style="color: #dc3545;"></i>
+                            <a href="#" data-pdf="{{ document_url(doc) | e }}" data-title="{{ doc.title | e }}" class="pdf-link" style="color: rgba(255,255,255,0.7); text-decoration: none; cursor: pointer;" aria-label="Открыть документ {{ doc.title | e }}">
+                                {{ doc.title | e }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+             
+            <div class="footer-bottom">
+                <p>&copy; 2026 База отдыха «Байкал-центр». Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Кнопка наверх -->
+    <button class="scroll-top" id="scrollTop" aria-label="Наверх">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Скрипты -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ===== AOS АНИМАЦИИ =====
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    duration: 800,
+                    once: true,
+                    offset: 50,
+                    disable: window.innerWidth < 768
+                });
+            }
+
+            // ===== МОБИЛЬНОЕ МЕНЮ =====
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuOverlay = document.getElementById('menuOverlay');
+            const body = document.body;
+
+            if (menuToggle && mobileMenu && menuOverlay) {
+                function openMenu() {
+                    mobileMenu.classList.add('active');
+                    menuOverlay.classList.add('active');
+                    menuToggle.classList.add('active');
+                    menuToggle.setAttribute('aria-expanded', 'true');
+                    body.classList.add('menu-open');
+                }
+
+                function closeMenu() {
+                    mobileMenu.classList.remove('active');
+                    menuOverlay.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                    body.classList.remove('menu-open');
+                }
+
+                menuToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (mobileMenu.classList.contains('active')) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                });
+
+                menuOverlay.addEventListener('click', closeMenu);
+
+                document.querySelectorAll('.circle-menu-item').forEach(function(item) {
+                    item.addEventListener('click', closeMenu);
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+                        closeMenu();
+                    }
+                });
+
+                // Закрытие при скролле (для удобства)
+                let lastScrollTop = 0;
+                window.addEventListener('scroll', function() {
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    if (Math.abs(scrollTop - lastScrollTop) > 50 && mobileMenu.classList.contains('active')) {
+                        closeMenu();
+                    }
+                    lastScrollTop = scrollTop;
+                });
+            }
+
+            // ===== ПОДСВЕТКА АКТИВНОГО ПУНКТА МЕНЮ =====
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.desktop-menu .nav-link, .circle-menu-item:not(.circle-menu-item-auth)');
+            navLinks.forEach(function(link) {
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('http')) return;
+
+                const [linkPath, anchor] = href.split('#');
+                const isHomeLink = linkPath === '' || linkPath === '/';
+                const isCurrentHome = currentPath === '/';
+
+                // Условие добавления класса active:
+                // - на главной подсвечиваем только ссылку на главную (без якоря)
+                // - на других страницах подсвечиваем точное совпадение пути
+                if (isCurrentHome && isHomeLink) {
+                    if (!anchor) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                } else if (linkPath === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // ===== ПЛАВНЫЙ СКРОЛЛ ПО ЯКОРНЫМ ССЫЛКАМ =====
+            document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+                anchor.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href === '#' || href === '#!') return;
+                    if (this.closest('.carousel-arrow') || this.closest('.lightbox')) return;
+                    
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        const navbar = document.querySelector('.navbar');
+                        const headerHeight = navbar ? navbar.offsetHeight : 0;
+                        const targetPosition = target.offsetTop - headerHeight;
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // ===== КНОПКА НАВЕРХ =====
+            const scrollBtn = document.getElementById('scrollTop');
+            if (scrollBtn) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 300) {
+                        scrollBtn.style.display = 'flex';
+                    } else {
+                        scrollBtn.style.display = 'none';
+                    }
+                });
+                
+                scrollBtn.addEventListener('click', function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            // ===== PDF — БЕЗОПАСНОЕ ОТКРЫТИЕ =====
+            document.querySelectorAll('.pdf-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = this.getAttribute('data-pdf');
+                    const title = this.getAttribute('data-title') || 'Документ';
+                    if (url) {
+                        window.open(url, '_blank');
+                    }
+                });
+            });
+
+            // ===== ПРЕДОТВРАЩЕНИЕ ГОРИЗОНТАЛЬНОГО СКРОЛЛА =====
+            document.body.style.overflowX = 'hidden';
+            document.documentElement.style.overflowX = 'hidden';
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+<!-- jQuery (нужен для Toastr) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<script>
+    // Настройки Toastr
+    toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "5000"
+    };
+</script>
+
+<!-- Скрытый контейнер для flash-сообщений -->
+<div class="flash-messages" style="display:none;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var container = document.querySelector('.flash-messages');
+        if (container) {
+            var alerts = container.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var message = alert.textContent.trim();
+                if (message) {
+                    var category = 'info';
+                    if (alert.classList.contains('alert-success')) category = 'success';
+                    else if (alert.classList.contains('alert-danger')) category = 'danger';
+                    else if (alert.classList.contains('alert-warning')) category = 'warning';
+                    
+                    if (category === 'success') toastr.success(message);
+                    else if (category === 'danger') toastr.error(message);
+                    else if (category === 'warning') toastr.warning(message);
+                    else toastr.info(message);
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

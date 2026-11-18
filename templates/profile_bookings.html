@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+
+{% block title %}Мои бронирования — Байкал-центр{% endblock %}
+
+{% block content %}
+<section class="bookings-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9">
+
+                <!-- Заголовок -->
+                <div class="bookings-header" data-aos="fade-up" data-aos-delay="50">
+                    <h1 class="bookings-title">
+                        <i class="fas fa-calendar-check" style="color: var(--gold);"></i>
+                        Мои бронирования
+                    </h1>
+                    <p class="bookings-subtitle">Здесь отображаются все ваши бронирования в базе отдыха «Байкал-центр»</p>
+                </div>
+
+                {% if bookings %}
+                    <div class="bookings-list" data-aos="fade-up" data-aos-delay="100">
+                        {% for booking in bookings %}
+                            <div class="booking-card {% if booking.status == 'cancelled' %}cancelled{% endif %}">
+                                <!-- Левая часть: фото + информация -->
+                                <div class="booking-main">
+                                    <div class="booking-image">
+                                        {% if booking.room.main_photo %}
+                                            <img src="{{ booking.room.main_photo }}" alt="{{ booking.room.name }}">
+                                        {% else %}
+                                            <div class="booking-image-placeholder"><i class="fas fa-bed"></i></div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="booking-info">
+                                        <h3 class="booking-room-name">
+                                            <a href="{{ url_for('room_detail', slug=booking.room.slug) }}">
+                                                {{ booking.room.name }}
+                                            </a>
+                                        </h3>
+                                        <div class="booking-meta">
+                                            <span><i class="fas fa-calendar-alt"></i> {{ booking.check_in.strftime('%d.%m.%Y') }} — {{ booking.check_out.strftime('%d.%m.%Y') }}</span>
+                                            <span><i class="fas fa-user"></i> {{ booking.guests|pluralize('гость', 'гостя', 'гостей') }}</span>
+                                            <span><i class="fas fa-clock"></i> {{ (booking.check_out - booking.check_in).days|pluralize('ночь', 'ночи', 'ночей') }}</span>
+                                            {% if booking.special_requests %}
+                                                <span class="booking-request"><i class="fas fa-comment"></i> {{ booking.special_requests }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Правая часть: статус, цена, кнопки -->
+                                <div class="booking-aside">
+                                    <div class="booking-status">
+                                        <span class="status-badge status-{{ booking.status }}">
+                                            {% if booking.status == 'pending' %}
+                                                <i class="fas fa-clock"></i> Ожидает
+                                            {% elif booking.status == 'confirmed' %}
+                                                <i class="fas fa-check-circle"></i> Подтверждено
+                                            {% elif booking.status == 'cancelled' %}
+                                                <i class="fas fa-times-circle"></i> Отменено
+                                            {% elif booking.status == 'completed' %}
+                                                <i class="fas fa-check-double"></i> Завершено
+                                            {% else %}
+                                                {{ booking.status }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="booking-price">
+                                        <span class="price-number">{{ booking.total_price|int }} ₽</span>
+                                        <span class="price-label">за {{ (booking.check_out - booking.check_in).days|pluralize('ночь', 'ночи', 'ночей') }}</span>
+                                    </div>
+                                    <div class="booking-actions">
+                                        {% if booking.status in ['pending', 'confirmed'] %}
+                                            <form action="{{ url_for('cancel_booking', booking_id=booking.id) }}" method="POST">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn-cancel" onclick="return confirm('Вы уверены, что хотите отменить бронирование?')">
+                                                    <i class="fas fa-times"></i> Отменить
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        {% if booking.status == 'cancelled' %}
+                                            <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="POST" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn-delete" onclick="return confirm('Удалить это бронирование из истории?')">
+                                                    <i class="fas fa-trash-alt"></i> Удалить
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- Пустое состояние -->
+                    <div class="bookings-empty" data-aos="fade-up" data-aos-delay="100">
+                        <div class="empty-icon">
+                            <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <h3 class="empty-title">У вас пока нет бронирований</h3>
+                        <p class="empty-text">Выберите понравившийся номер и забронируйте его прямо сейчас!</p>
+                        <a href="{{ url_for('room_list') }}" class="btn btn-gold">
+                            <i class="fas fa-search"></i> Посмотреть номера
+                        </a>
+                    </div>
+                {% endif %}
+
+                <!-- Кнопка "Назад" -->
+                <div class="bookings-back" data-aos="fade-up" data-aos-delay="150">
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Вернуться в профиль
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* ===== ОБЩИЕ СТИЛИ ===== */
+    .bookings-section {
+        padding: 50px 0 60px;
+        background: linear-gradient(135deg, #f5f7f6 0%, #e8ece9 100%);
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+    }
+
+    /* ===== ЗАГОЛОВОК ===== */
+    .bookings-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .bookings-title {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 700;
+        font-size: 2rem;
+        color: var(--primary-dark);
+        margin-bottom: 6px;
+    }
+    .bookings-title i {
+        margin-right: 10px;
+    }
+    .bookings-subtitle {
+        font-size: 0.95rem;
+        color: var(--gray);
+        margin: 0;
+    }
+
+    /* ===== КАРТОЧКИ ===== */
+    .bookings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .booking-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(212, 175, 55, 0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .booking-card:hover {
+        border-color: rgba(212, 175, 55, 0.2);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .booking-card.cancelled {
+        opacity: 0.6;
+    }
+    .booking-card.cancelled .booking-room-name a {
+        text-decoration: line-through;
+    }
+
+    /* Левая часть */
+    .booking-main {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .booking-image {
+        width: 100px;
+        height: 76px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #f0f0f0;
+    }
+    .booking-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .booking-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e9ecef;
+        color: #adb5bd;
+        font-size: 2rem;
+    }
+
+    .booking-info {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .booking-room-name {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        font-size: 1.15rem;
+        margin: 0;
+    }
+    .booking-room-name a {
+        color: var(--primary-dark);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .booking-room-name a:hover {
+        color: var(--gold);
+    }
+
+    .booking-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 20px;
+        font-size: 0.85rem;
+        color: var(--gray);
+    }
+    .booking-meta i {
+        color: var(--gold);
+        width: 16px;
+        margin-right: 4px;
+    }
+    .booking-request {
+        background: rgba(212, 175, 55, 0.06);
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: var(--gray);
+    }
+    .booking-request i {
+        color: var(--gold);
+        margin-right: 6px;
+    }
+
+    /* ===== ПРАВАЯ ЧАСТЬ — ФИКСИРОВАННАЯ СЕТКА ===== */
+    .booking-aside {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        align-items: center;
+        flex-shrink: 0;
+        margin-left: 12px;
+        min-width: 300px;
+    }
+
+    .booking-status {
+        text-align: left;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 16px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        background: #f1f3f5;
+        color: #212529;
+        white-space: nowrap;
+    }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #d1ecf1; color: #0c5460; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-completed { background: #d4edda; color: #155724; }
+
+    .booking-price {
+        text-align: center;
+        line-height: 1.2;
+    }
+    .price-number {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--primary-dark);
+    }
+    .price-label {
+        font-size: 0.7rem;
+        color: var(--gray);
+        display: block;
+    }
+
+    .booking-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        padding: 4px 18px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .btn-cancel:hover {
+        background: #dc3545;
+        color: #fff;
+        border-color: #dc3545;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        background: transparent;
+        border: 1px solid #6c757d;
+        color: #6c757d;
+        padding: 4px 18px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .btn-delete:hover {
+        background: #dc3545;
+        border-color: #dc3545;
+        color: #fff;
+    }
+
+    /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+    .bookings-empty {
+        text-align: center;
+        padding: 50px 20px;
+        background: var(--white);
+        border-radius: 20px;
+        border: 1px solid rgba(212, 175, 55, 0.08);
+    }
+    .empty-icon {
+        font-size: 3.5rem;
+        color: var(--gold);
+        opacity: 0.4;
+        margin-bottom: 16px;
+    }
+    .empty-title {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        font-size: 1.4rem;
+        color: var(--primary-dark);
+        margin-bottom: 8px;
+    }
+    .empty-text {
+        color: var(--gray);
+        margin-bottom: 20px;
+    }
+    .btn-gold {
+        background: var(--gold);
+        border: none;
+        color: var(--dark);
+        padding: 10px 30px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: all 0.25s ease;
+    }
+    .btn-gold:hover {
+        background: var(--gold-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    /* ===== КНОПКА "НАЗАД" ===== */
+    .bookings-back {
+        margin-top: 30px;
+        text-align: center;
+    }
+    .bookings-back .btn {
+        border-color: var(--gray);
+        color: var(--gray);
+        padding: 8px 28px;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.25s ease;
+    }
+    .bookings-back .btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(212, 175, 55, 0.04);
+    }
+
+    /* ===== АДАПТИВ ===== */
+    @media (max-width: 992px) {
+        .booking-card {
+            flex-wrap: wrap;
+            padding: 18px 20px;
+        }
+        .booking-main {
+            flex: 1 1 100%;
+        }
+        .booking-image {
+            width: 80px;
+            height: 64px;
+        }
+        .booking-aside {
+            flex: 1 1 100%;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-left: 0;
+            margin-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.04);
+            padding-top: 12px;
+            min-width: unset;
+        }
+        .booking-price {
+            text-align: right;
+        }
+        .booking-status {
+            text-align: left;
+        }
+        .booking-actions {
+            grid-column: span 2;
+            justify-content: flex-end;
+        }
+        .bookings-title {
+            font-size: 1.6rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .bookings-section {
+            padding: 30px 0 40px;
+        }
+        .booking-card {
+            padding: 14px 16px;
+        }
+        .booking-image {
+            width: 60px;
+            height: 50px;
+        }
+        .booking-room-name {
+            font-size: 1rem;
+        }
+        .booking-meta {
+            font-size: 0.75rem;
+            gap: 6px 12px;
+        }
+        .booking-meta i {
+            width: 14px;
+        }
+        .booking-aside {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .price-number {
+            font-size: 1rem;
+        }
+        .btn-cancel,
+        .btn-delete {
+            font-size: 0.7rem;
+            padding: 3px 12px;
+        }
+        .bookings-title {
+            font-size: 1.3rem;
+        }
+        .bookings-subtitle {
+            font-size: 0.85rem;
+        }
+        .empty-icon {
+            font-size: 2.5rem;
+        }
+        .empty-title {
+            font-size: 1.1rem;
+        }
+        .booking-actions {
+            justify-content: flex-start;
+            grid-column: span 2;
+        }
+        .booking-price {
+            text-align: right;
+        }
+    }
+
+    /* ===== НА МОБИЛКАХ ВСЁ В ОДНУ СТРОКУ ===== */
+    @media (max-width: 576px) {
+        .booking-aside {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 4px !important;
+            min-width: unset !important;
+            width: 100%;
+        }
+        .booking-status {
+            flex: 0 0 auto;
+        }
+        .status-badge {
+            font-size: 0.6rem !important;
+            padding: 3px 8px !important;
+            white-space: nowrap;
+        }
+        .booking-price {
+            text-align: center;
+            flex: 0 0 auto;
+        }
+        .price-number {
+            font-size: 0.75rem !important;
+        }
+        .price-label {
+            font-size: 0.5rem !important;
+            display: none; /* скрываем подпись на мобилках, чтобы не занимала место */
+        }
+        .booking-actions {
+            flex: 0 0 auto;
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+        .btn-cancel,
+        .btn-delete {
+            font-size: 0.55rem !important;
+            padding: 2px 8px !important;
+            white-space: nowrap;
+            gap: 4px;
+        }
+        .btn-cancel i,
+        .btn-delete i {
+            font-size: 0.5rem;
+        }
+        .booking-card {
+            padding: 12px 14px;
+        }
+        .booking-main {
+            gap: 12px;
+        }
+        .booking-image {
+            width: 50px;
+            height: 40px;
+        }
+        .booking-room-name {
+            font-size: 0.9rem;
+        }
+        .booking-meta {
+            font-size: 0.65rem;
+            gap: 4px 8px;
+        }
+        .booking-meta i {
+            width: 12px;
+            font-size: 0.6rem;
+        }
+        .bookings-title {
+            font-size: 1.2rem;
+        }
+        .bookings-subtitle {
+            font-size: 0.75rem;
+        }
+        /* чтобы при отсутствии кнопок (например, если статус completed) не было пустого места */
+        .booking-actions:empty {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}

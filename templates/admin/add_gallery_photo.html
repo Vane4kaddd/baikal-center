@@ -1,0 +1,620 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Добавить фото | Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Предотвращение горизонтального скролла */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    .container, .row, .col-md-6 {
+        overflow-x: hidden;
+    }
+    
+    .form-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-header {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .form-header h4 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .form-header h4 i {
+        color: var(--gold);
+        margin-right: 8px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--primary-dark);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .form-label i {
+        color: var(--gold);
+        margin-right: 6px;
+    }
+    
+    .form-control {
+        border: 2px solid rgba(11, 59, 59, 0.1);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        background: var(--white);
+    }
+    
+    .form-control:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+        outline: none;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
+        border: none;
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        color: white;
+        cursor: pointer;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+    
+    .btn-success:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .btn-outline-secondary {
+        border: 1.5px solid var(--primary-light);
+        color: var(--primary-dark);
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        background: transparent;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+    
+    .back-link:hover {
+        color: var(--gold-light);
+        transform: translateX(-3px);
+    }
+    
+    .back-link i {
+        margin-right: 8px;
+    }
+    
+    .upload-area {
+        border: 2px dashed rgba(212, 175, 55, 0.3);
+        border-radius: 16px;
+        padding: 35px 20px;
+        text-align: center;
+        background: rgba(212, 175, 55, 0.03);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .upload-area:hover {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.08);
+    }
+    
+    .upload-area i {
+        font-size: 2.5rem;
+        color: var(--gold);
+        margin-bottom: 12px;
+    }
+    
+    .upload-area.has-error {
+        border-color: #dc3545;
+        background: rgba(220, 53, 69, 0.05);
+    }
+    
+    .preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 5px;
+    }
+    
+    .preview-item {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        flex-shrink: 0;
+    }
+    
+    .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .preview-item .remove-preview {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    
+    .preview-item .remove-preview:hover {
+        background: #dc3545;
+        transform: scale(1.1);
+    }
+    
+    .preview-item .file-size {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        right: 4px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .or-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .or-divider::before,
+    .or-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    }
+    
+    .or-divider span {
+        padding: 0 15px;
+        color: var(--gray);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    
+    .form-text-error {
+        color: #dc3545;
+        font-size: 0.8rem;
+        margin-top: 8px;
+        display: none;
+        text-align: center;
+    }
+    
+    .form-text-error i {
+        margin-right: 5px;
+    }
+    
+    /* Адаптивность для телефона */
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 18px;
+            border-radius: 16px;
+        }
+        
+        .form-header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+        }
+        
+        .form-header h4 {
+            font-size: 1.1rem;
+        }
+        
+        .upload-area {
+            padding: 25px 15px;
+        }
+        
+        .upload-area i {
+            font-size: 2rem;
+        }
+        
+        .upload-area p {
+            font-size: 0.85rem !important;
+        }
+        
+        .preview-item {
+            width: 85px;
+            height: 85px;
+        }
+        
+        .btn-success,
+        .btn-outline-secondary {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            width: auto;
+            flex: 0 0 auto;
+        }
+        
+        .d-flex.gap-2 {
+            justify-content: center;
+        }
+        
+        .back-link {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .form-card {
+            padding: 15px;
+        }
+        
+        .form-header h4 {
+            font-size: 1rem;
+        }
+        
+        .upload-area {
+            padding: 20px 12px;
+        }
+        
+        .upload-area i {
+            font-size: 1.8rem;
+        }
+        
+        .preview-item {
+            width: 75px;
+            height: 75px;
+        }
+        
+        .preview-item .file-size {
+            font-size: 0.5rem;
+        }
+        
+        .btn-success,
+        .btn-outline-secondary {
+            padding: 7px 14px;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('admin_gallery') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Назад к галерее
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="form-card">
+            <div class="form-header">
+                <h4>
+                    <i class="fas fa-images"></i> Загрузить фотографии
+                </h4>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                <!-- ✅ CSRF-токен -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Загрузка нескольких фото -->
+                <div class="upload-area" id="uploadArea" 
+                     onclick="document.getElementById('photoInput').click()"
+                     role="button" 
+                     tabindex="0"
+                     aria-label="Выбрать фотографии для загрузки"
+                     onkeydown="if(event.key==='Enter'||event.key===' ') {document.getElementById('photoInput').click();}">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p style="font-weight: 500; margin-bottom: 5px;">
+                        <i class="fas fa-mobile-alt me-1"></i> Нажмите для выбора фото
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 0;">
+                        Можно выбрать несколько файлов (JPG, PNG, WEBP)
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--gray); margin-top: 8px; opacity: 0.6;">
+                        Максимум 20 фото, до 15 МБ каждый
+                    </p>
+                </div>
+                
+                <input type="file" 
+                       id="photoInput" 
+                       name="photos" 
+                       accept="image/jpeg,image/png,image/webp,image/gif" 
+                       multiple 
+                       style="display: none;">
+                
+                <!-- Превью выбранных фото -->
+                <div class="preview-container" id="previewContainer"></div>
+                
+                <!-- Сообщение об ошибке -->
+                <div class="form-text-error" id="uploadError">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <span id="errorMessage">Ошибка загрузки</span>
+                </div>
+                
+                <hr style="border-color: rgba(212, 175, 55, 0.2); margin-top: 20px;">
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success" id="submitBtn">
+                        <i class="fas fa-save me-1"></i>Сохранить
+                    </button>
+                    <a href="{{ url_for('admin_gallery') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const MAX_FILES = 20;
+    const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    
+    const fileInput = document.getElementById('photoInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const uploadArea = document.getElementById('uploadArea');
+    const uploadError = document.getElementById('uploadError');
+    const errorMessage = document.getElementById('errorMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('uploadForm');
+    
+    let selectedFiles = [];
+    
+    // === ПРОВЕРКА ФАЙЛОВ ===
+    function validateFiles(files) {
+        // Проверка количества
+        if (files.length > MAX_FILES) {
+            showError(`Можно загрузить не более ${MAX_FILES} фото за раз`);
+            return false;
+        }
+        
+        // Проверка каждого файла
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // Проверка типа
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                showError(`Файл "${file.name}" не является допустимым изображением`);
+                return false;
+            }
+            
+            // Проверка размера
+            if (file.size > MAX_FILE_SIZE) {
+                showError(`Файл "${file.name}" слишком большой! Максимум 15 МБ`);
+                return false;
+            }
+        }
+        
+        hideError();
+        return true;
+    }
+    
+    // === ПОКАЗ/СКРЫТИЕ ОШИБКИ ===
+    function showError(message) {
+        errorMessage.textContent = message;
+        uploadError.style.display = 'block';
+        uploadArea.classList.add('has-error');
+    }
+    
+    function hideError() {
+        uploadError.style.display = 'none';
+        uploadArea.classList.remove('has-error');
+    }
+    
+    // === ФУНКЦИЯ УДАЛЕНИЯ ПРЕВЬЮ ===
+    function removePreview(index) {
+        selectedFiles.splice(index, 1);
+        renderPreviews();
+        
+        // Обновляем input
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+    }
+    
+    // === ОТОБРАЖЕНИЕ ПРЕВЬЮ ===
+    function renderPreviews() {
+        previewContainer.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                
+                // Безопасное экранирование base64
+                const imgSrc = e.target.result;
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                
+                item.innerHTML = `
+                    <img src="${imgSrc}" alt="Превью фото ${index + 1}" loading="lazy">
+                    <button type="button" class="remove-preview" data-index="${index}" 
+                            aria-label="Удалить фото ${index + 1}" title="Удалить">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <span class="file-size">${fileSizeMB} МБ</span>
+                `;
+                previewContainer.appendChild(item);
+                
+                // Обработчик удаления
+                const removeBtn = item.querySelector('.remove-preview');
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const idx = parseInt(this.dataset.index);
+                    removePreview(idx);
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    // === ОБРАБОТКА ВЫБОРА ФАЙЛОВ ===
+    fileInput.addEventListener('change', function(event) {
+        const files = Array.from(this.files);
+        
+        if (files.length === 0) return;
+        
+        // Валидация
+        if (!validateFiles(files)) {
+            this.value = '';
+            return;
+        }
+        
+        // Добавляем файлы к существующим
+        selectedFiles = selectedFiles.concat(files);
+        renderPreviews();
+        
+        // Сбрасываем input, чтобы можно было выбрать те же файлы снова
+        this.value = '';
+        
+        hideError();
+    });
+    
+    // === ПОДДЕРЖКА DRAG & DROP ===
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.borderColor = 'var(--gold)';
+        this.style.background = 'rgba(212, 175, 55, 0.08)';
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '';
+        this.style.background = '';
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '';
+        this.style.background = '';
+        
+        const files = Array.from(e.dataTransfer.files);
+        
+        if (files.length === 0) return;
+        
+        if (!validateFiles(files)) {
+            return;
+        }
+        
+        selectedFiles = selectedFiles.concat(files);
+        renderPreviews();
+        hideError();
+    });
+    
+    // === ОТПРАВКА ФОРМЫ ===
+    form.addEventListener('submit', function(event) {
+        // Проверяем, есть ли файлы
+        if (selectedFiles.length === 0) {
+            event.preventDefault();
+            showError('Выберите хотя бы одно фото для загрузки');
+            return false;
+        }
+        
+        // Блокируем кнопку
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Сохранение...';
+        
+        // Добавляем файлы в formData
+        const formData = new FormData(this);
+        selectedFiles.forEach(file => {
+            formData.append('photos', file);
+        });
+        
+        // Отправляем через fetch для лучшего контроля
+        event.preventDefault();
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                return response.text();
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Сохранить';
+            showError('Произошла ошибка при загрузке. Попробуйте снова.');
+        });
+    });
+});
+</script>
+{% endblock %}

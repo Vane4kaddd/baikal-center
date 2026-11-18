@@ -1,0 +1,916 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Добавить номер | Байкал-центр{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Предотвращение горизонтального скролла */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    .container, .row, .col-lg-8 {
+        overflow-x: hidden;
+    }
+    
+    .form-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-header {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .form-header h4 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .form-header h4 i {
+        color: var(--gold);
+        margin-right: 8px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--primary-dark);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .form-label i {
+        color: var(--gold);
+        margin-right: 6px;
+    }
+    
+    .form-label .required-star {
+        color: #dc3545;
+        margin-left: 2px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid rgba(11, 59, 59, 0.1);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        background: var(--white);
+        width: 100%;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+        outline: none;
+    }
+    
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-control.is-invalid:focus, .form-select.is-invalid:focus {
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.12);
+    }
+    
+    .form-text-error {
+        color: #dc3545;
+        font-size: 0.75rem;
+        margin-top: 5px;
+        display: none;
+    }
+    
+    .form-text-error i {
+        margin-right: 4px;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
+        border: none;
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        color: white;
+        cursor: pointer;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+    
+    .btn-success:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .btn-outline-secondary {
+        border: 1.5px solid var(--primary-light);
+        color: var(--primary-dark);
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        background: transparent;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+    
+    .back-link:hover {
+        color: var(--gold-light);
+        transform: translateX(-3px);
+    }
+    
+    .back-link i {
+        margin-right: 8px;
+    }
+    
+    /* Загрузка фото */
+    .photo-upload-area {
+        border: 2px dashed rgba(212, 175, 55, 0.3);
+        border-radius: 16px;
+        padding: 25px 20px;
+        text-align: center;
+        background: rgba(212, 175, 55, 0.03);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .photo-upload-area:hover {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.08);
+    }
+    
+    .photo-upload-area i {
+        font-size: 2.2rem;
+        color: var(--gold);
+        margin-bottom: 10px;
+    }
+    
+    .photo-upload-area.has-error {
+        border-color: #dc3545;
+        background: rgba(220, 53, 69, 0.05);
+    }
+    
+    /* Галерея превью */
+    .gallery-preview {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 5px;
+    }
+    
+    .gallery-item {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 2px solid var(--white);
+        flex-shrink: 0;
+    }
+    
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .gallery-item .remove-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(220, 53, 69, 0.95);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        z-index: 2;
+    }
+    
+    .gallery-item .remove-btn:hover {
+        background: #dc3545;
+        transform: scale(1.15);
+    }
+    
+    .gallery-item .main-badge {
+        position: absolute;
+        bottom: 6px;
+        left: 6px;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+        color: var(--primary-dark);
+        padding: 4px 10px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        z-index: 2;
+    }
+    
+    .gallery-item .make-main-btn {
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--primary-dark);
+        border: 1px solid var(--gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        z-index: 2;
+    }
+    
+    .gallery-item .make-main-btn:hover {
+        background: var(--gold);
+        color: var(--primary-dark);
+        transform: scale(1.15);
+    }
+    
+    .or-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 25px 0 15px;
+    }
+    
+    .or-divider::before,
+    .or-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    }
+    
+    .or-divider span {
+        padding: 0 15px;
+        color: var(--gray);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+    
+    .text-muted {
+        color: var(--gray) !important;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+    
+    /* Адаптивность для телефона */
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 18px;
+            border-radius: 16px;
+        }
+        
+        .form-header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+        }
+        
+        .form-header h4 {
+            font-size: 1.1rem;
+        }
+        
+        .form-label {
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+        }
+        
+        .form-control, .form-select {
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+        
+        .mb-4 {
+            margin-bottom: 15px !important;
+        }
+        
+        .row {
+            margin-left: -5px;
+            margin-right: -5px;
+        }
+        
+        .col-md-6 {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        
+        .btn-success,
+        .btn-outline-secondary {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            width: auto;
+            flex: 0 0 auto;
+        }
+        
+        .d-flex.gap-2 {
+            justify-content: center;
+        }
+        
+        .back-link {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .photo-upload-area {
+            padding: 18px 15px;
+        }
+        
+        .photo-upload-area i {
+            font-size: 1.8rem;
+        }
+        
+        .gallery-item {
+            width: 85px;
+            height: 85px;
+        }
+        
+        .gallery-item .remove-btn {
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
+        }
+        
+        .gallery-item .make-main-btn {
+            width: 24px;
+            height: 24px;
+            font-size: 11px;
+        }
+        
+        .gallery-item .main-badge {
+            padding: 3px 8px;
+            font-size: 0.6rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .form-card {
+            padding: 15px;
+        }
+        
+        .form-header h4 {
+            font-size: 1rem;
+        }
+        
+        .form-control, .form-select {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .btn-success,
+        .btn-outline-secondary {
+            padding: 7px 14px;
+            font-size: 0.75rem;
+        }
+        
+        .gallery-item {
+            width: 75px;
+            height: 75px;
+        }
+        
+        .photo-upload-area p {
+            font-size: 0.8rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('admin_rooms') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Назад к номерам
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="form-card">
+            <div class="form-header">
+                <h4>
+                    <i class="fas fa-bed"></i> Новый номер
+                </h4>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" id="roomForm" novalidate>
+                <!-- ✅ CSRF-токен -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <label class="form-label" for="roomName">
+                        <i class="fas fa-tag"></i> Название номера
+                        <span class="required-star">*</span>
+                    </label>
+                    <input type="text" 
+                           name="name" 
+                           id="roomName"
+                           class="form-control" 
+                           required 
+                           maxlength="200"
+                           autocomplete="off"
+                           aria-required="true"
+                           placeholder="Например: Люкс с видом на Байкал">
+                    <div class="form-text-error" id="nameError">
+                        <i class="fas fa-exclamation-circle"></i> 
+                        Название должно содержать минимум 2 символа
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="categorySelect">
+                        <i class="fas fa-layer-group"></i> Категория
+                        <span class="required-star">*</span>
+                    </label>
+                    <select name="category_id" id="categorySelect" class="form-select" required aria-required="true">
+                        <option value="">Выберите категорию</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name | e }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="roomDescription">
+                        <i class="fas fa-align-left"></i> Описание
+                    </label>
+                    <textarea name="description" id="roomDescription" rows="3" class="form-control" 
+                              maxlength="2000"
+                              placeholder="Опишите номер: площадь, вид, удобства..."></textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="roomPrice">
+                            <i class="fas fa-ruble-sign"></i> Цена (₽/сутки)
+                            <span class="required-star">*</span>
+                        </label>
+                        <input type="number" 
+                               name="price" 
+                               id="roomPrice"
+                               class="form-control" 
+                               required 
+                               min="0" 
+                               step="100"
+                               aria-required="true"
+                               placeholder="Укажите цену...">
+                        <div class="form-text-error" id="priceError">
+                            <i class="fas fa-exclamation-circle"></i> 
+                            Цена должна быть положительным числом
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="roomCapacity">
+                            <i class="fas fa-users"></i> Вместимость
+                            <span class="required-star">*</span>
+                        </label>
+                        <select name="capacity" id="roomCapacity" class="form-select" required aria-required="true">
+                            <option value="1">1 человек</option>
+                            <option value="2" selected>2 человека</option>
+                            <option value="3">3 человека</option>
+                            <option value="4">4 человека</option>
+                            <option value="5">5 человек</option>
+                            <option value="6">6 человек</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- ✅ ДОБАВЛЕНО: ПОЛЕ ДЛЯ ПОРЯДКА ОТОБРАЖЕНИЯ                    -->
+                <!-- ============================================================ -->
+                <div class="mb-3">
+                    <label class="form-label" for="roomOrder">
+                        <i class="fas fa-sort-numeric-down"></i> Порядок отображения
+                    </label>
+                    <input type="number" 
+                           name="order" 
+                           id="roomOrder"
+                           class="form-control" 
+                           value="{{ rooms_count + 1 if rooms_count is defined else 1 }}" 
+                           min="0"
+                           aria-describedby="orderHelp">
+                    <div id="orderHelp" class="form-text text-muted" style="margin-top: 5px; font-size: 0.8rem; color: var(--gray);">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        Меньшее число — выше в списке. По умолчанию ставится в конец.
+                    </div>
+                </div>
+                <!-- ============================================================ -->
+                <!-- КОНЕЦ БЛОКА С ПОЛЕМ order                                     -->
+                <!-- ============================================================ -->
+                
+                <!-- ЗАГРУЗКА НЕСКОЛЬКИХ ФОТО -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-images"></i> Фотографии номера
+                        <span class="required-star">*</span>
+                    </label>
+                    
+                    <div class="photo-upload-area" id="uploadArea"
+                         onclick="document.getElementById('multiPhotoInput').click()"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Загрузить фотографии номера"
+                         onkeydown="if(event.key==='Enter'||event.key===' ') {document.getElementById('multiPhotoInput').click();}">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p style="margin-bottom: 5px; font-weight: 500;">
+                            <i class="fas fa-mobile-alt me-1"></i> Загрузить фотографии
+                        </p>
+                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 0;">
+                            Можно выбрать несколько файлов (JPG, PNG, WEBP)
+                        </p>
+                        <p style="font-size: 0.75rem; color: var(--gray); margin-top: 8px; opacity: 0.6;">
+                            Максимум 20 фото, до 5 МБ каждый
+                        </p>
+                    </div>
+                    
+                    <input type="file" 
+                           id="multiPhotoInput" 
+                           name="photos" 
+                           accept="image/jpeg,image/png,image/webp,image/gif" 
+                           multiple 
+                           style="display: none;">
+                    
+                    <!-- Превью загруженных фото -->
+                    <div class="gallery-preview" id="photoGallery"></div>
+                    
+                    <div class="form-text-error" id="photoError">
+                        <i class="fas fa-exclamation-circle"></i> 
+                        <span id="photoErrorMessage">Ошибка загрузки фото</span>
+                    </div>
+                    
+                    <!-- Скрытое поле для главного фото -->
+                    <input type="hidden" name="main_photo_index" id="mainPhotoIndex" value="-1">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label" for="roomStatus">
+                        <i class="fas fa-circle"></i> Статус номера
+                    </label>
+                    <select name="is_available" id="roomStatus" class="form-select">
+                        <option value="1" selected>✅ Доступен для бронирования</option>
+                        <option value="0">❌ Недоступен</option>
+                    </select>
+                </div>
+                
+                <hr style="border-color: rgba(212, 175, 55, 0.2);">
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success" id="submitBtn">
+                        <i class="fas fa-save me-1"></i>Сохранить
+                    </button>
+                    <a href="{{ url_for('admin_rooms') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // === КОНСТАНТЫ ===
+    const MAX_FILES = 20;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    
+    // === ЭЛЕМЕНТЫ ===
+    const form = document.getElementById('roomForm');
+    const fileInput = document.getElementById('multiPhotoInput');
+    const gallery = document.getElementById('photoGallery');
+    const uploadArea = document.getElementById('uploadArea');
+    const photoError = document.getElementById('photoError');
+    const photoErrorMessage = document.getElementById('photoErrorMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    const mainPhotoIndexInput = document.getElementById('mainPhotoIndex');
+    
+    const nameInput = document.getElementById('roomName');
+    const nameError = document.getElementById('nameError');
+    const priceInput = document.getElementById('roomPrice');
+    const priceError = document.getElementById('priceError');
+    
+    let uploadedFiles = [];
+    let mainPhotoIndex = -1;
+    
+    // === ВАЛИДАЦИЯ НАЗВАНИЯ ===
+    function validateName() {
+        const value = nameInput.value.trim();
+        if (value.length < 2) {
+            nameInput.classList.add('is-invalid');
+            nameError.style.display = 'block';
+            return false;
+        }
+        // Проверка на спецсимволы
+        if (/[<>\"\'{}()\[\]]/.test(value)) {
+            nameInput.classList.add('is-invalid');
+            nameError.textContent = 'Название содержит недопустимые символы';
+            nameError.style.display = 'block';
+            return false;
+        }
+        nameInput.classList.remove('is-invalid');
+        nameError.style.display = 'none';
+        return true;
+    }
+    
+    nameInput.addEventListener('input', validateName);
+    nameInput.addEventListener('blur', validateName);
+    
+    // === ВАЛИДАЦИЯ ЦЕНЫ ===
+    function validatePrice() {
+        const value = parseFloat(priceInput.value);
+        if (isNaN(value) || value < 0) {
+            priceInput.classList.add('is-invalid');
+            priceError.style.display = 'block';
+            return false;
+        }
+        priceInput.classList.remove('is-invalid');
+        priceError.style.display = 'none';
+        return true;
+    }
+    
+    priceInput.addEventListener('input', validatePrice);
+    priceInput.addEventListener('blur', validatePrice);
+    
+    // === ВАЛИДАЦИЯ ФАЙЛОВ ===
+    function validateFiles(files) {
+        // Проверка количества
+        if (files.length > MAX_FILES) {
+            showPhotoError(`Можно загрузить не более ${MAX_FILES} фото за раз`);
+            return false;
+        }
+        
+        // Проверка каждого файла
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                showPhotoError(`Файл "${file.name}" не является допустимым изображением`);
+                return false;
+            }
+            
+            if (file.size > MAX_FILE_SIZE) {
+                showPhotoError(`Файл "${file.name}" слишком большой! Максимум 5 МБ`);
+                return false;
+            }
+        }
+        
+        hidePhotoError();
+        return true;
+    }
+    
+    function showPhotoError(message) {
+        photoErrorMessage.textContent = message;
+        photoError.style.display = 'block';
+        uploadArea.classList.add('has-error');
+    }
+    
+    function hidePhotoError() {
+        photoError.style.display = 'none';
+        uploadArea.classList.remove('has-error');
+    }
+    
+    // === РЕНДЕРИНГ ПРЕВЬЮ ===
+    function renderPreviews() {
+        gallery.innerHTML = '';
+        
+        uploadedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.dataset.fileId = file.id;
+                item.dataset.fileIndex = index;
+                
+                item.innerHTML = `
+                    <img src="${e.target.result}" alt="Фото ${index + 1}">
+                    <button type="button" class="remove-btn" data-index="${index}" title="Удалить фото">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button type="button" class="make-main-btn" data-index="${index}" title="Сделать главным">
+                        <i class="fas fa-star"></i>
+                    </button>
+                    <span class="main-badge" style="display: ${mainPhotoIndex === index ? 'block' : 'none'};">
+                        <i class="fas fa-star"></i> Главное
+                    </span>
+                `;
+                gallery.appendChild(item);
+            };
+            reader.readAsDataURL(file.file);
+        });
+        
+        // Добавляем обработчики событий
+        document.querySelectorAll('.gallery-item .remove-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const index = parseInt(this.dataset.index);
+                removePhoto(index);
+            });
+        });
+        
+        document.querySelectorAll('.gallery-item .make-main-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const index = parseInt(this.dataset.index);
+                setMainPhoto(index);
+            });
+        });
+    }
+    
+    // === УДАЛЕНИЕ ФОТО ===
+    function removePhoto(index) {
+        if (index === -1 || index >= uploadedFiles.length) return;
+        
+        uploadedFiles.splice(index, 1);
+        
+        // Если удалили главное фото
+        if (mainPhotoIndex === index) {
+            mainPhotoIndex = -1;
+            if (uploadedFiles.length > 0) {
+                setMainPhoto(0);
+            } else {
+                mainPhotoIndexInput.value = '-1';
+            }
+        } else if (mainPhotoIndex > index) {
+            mainPhotoIndex--;
+            mainPhotoIndexInput.value = mainPhotoIndex;
+        }
+        
+        renderPreviews();
+        hidePhotoError();
+    }
+    
+    // === УСТАНОВКА ГЛАВНОГО ФОТО ===
+    function setMainPhoto(index) {
+        if (index === -1 || index >= uploadedFiles.length) return;
+        
+        mainPhotoIndex = index;
+        mainPhotoIndexInput.value = index;
+        renderPreviews();
+    }
+    
+    // === ОБРАБОТКА ВЫБОРА ФАЙЛОВ ===
+    fileInput.addEventListener('change', function(event) {
+        const files = Array.from(this.files);
+        
+        if (files.length === 0) return;
+        
+        if (!validateFiles(files)) {
+            this.value = '';
+            return;
+        }
+        
+        // Добавляем файлы
+        files.forEach(file => {
+            uploadedFiles.push({
+                id: 'new_' + Date.now() + '_' + Math.random().toString(36),
+                file: file
+            });
+        });
+        
+        // Если это первое фото, делаем его главным
+        if (uploadedFiles.length > 0 && mainPhotoIndex === -1) {
+            setMainPhoto(0);
+        }
+        
+        renderPreviews();
+        this.value = '';
+        hidePhotoError();
+    });
+    
+    // === DRAG & DROP ===
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.borderColor = 'var(--gold)';
+        this.style.background = 'rgba(212, 175, 55, 0.08)';
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '';
+        this.style.background = '';
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.borderColor = '';
+        this.style.background = '';
+        
+        const files = Array.from(e.dataTransfer.files);
+        
+        if (files.length === 0) return;
+        
+        if (!validateFiles(files)) {
+            return;
+        }
+        
+        files.forEach(file => {
+            uploadedFiles.push({
+                id: 'new_' + Date.now() + '_' + Math.random().toString(36),
+                file: file
+            });
+        });
+        
+        if (uploadedFiles.length > 0 && mainPhotoIndex === -1) {
+            setMainPhoto(0);
+        }
+        
+        renderPreviews();
+        hidePhotoError();
+    });
+    
+    // === ОТПРАВКА ФОРМЫ ===
+    form.addEventListener('submit', function(event) {
+        // Валидация названия
+        if (!validateName()) {
+            event.preventDefault();
+            nameInput.focus();
+            return false;
+        }
+        
+        // Валидация цены
+        if (!validatePrice()) {
+            event.preventDefault();
+            priceInput.focus();
+            return false;
+        }
+        
+        // Проверка наличия фото
+        if (uploadedFiles.length === 0) {
+            event.preventDefault();
+            showPhotoError('Добавьте хотя бы одно фото номера');
+            document.querySelector('.photo-upload-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+        }
+        
+        // Убеждаемся, что главное фото установлено
+        if (uploadedFiles.length > 0 && mainPhotoIndex === -1) {
+            setMainPhoto(0);
+        }
+        
+        // Добавляем файлы в форму
+        uploadedFiles.forEach(item => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.name = 'gallery_photos';
+            input.style.display = 'none';
+            
+            const dt = new DataTransfer();
+            dt.items.add(item.file);
+            input.files = dt.files;
+            this.appendChild(input);
+        });
+        
+        // Блокируем кнопку
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Сохранение...';
+    });
+});
+</script>
+{% endblock %}

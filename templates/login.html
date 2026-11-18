@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Вход — Байкал-центр{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-11 col-sm-10 col-md-8 col-lg-5">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div class="auth-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <h2 class="auth-title">Вход в аккаунт</h2>
+                        <p class="auth-subtitle">Войдите, чтобы бронировать номера</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('login') }}" class="auth-form" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="form-group">
+                            <label for="login_input" class="form-label">
+                                <i class="fas fa-envelope"></i> Email или телефон
+                                <span class="required-star">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="login_input" 
+                                   name="login_input" 
+                                   class="form-control" 
+                                   placeholder="ivan@example.com или +7 (924) 123-45-67"
+                                   value="{{ request.form.get('login_input', '') }}"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock"></i> Пароль
+                                <span class="required-star">*</span>
+                            </label>
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   class="form-control" 
+                                   placeholder="Введите пароль"
+                                   required>
+                        </div>
+
+                        <button type="submit" class="btn btn-gold btn-block">
+                            <i class="fas fa-sign-in-alt me-2"></i> Войти
+                        </button>
+
+                        <div class="auth-footer">
+                            <p>Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .auth-section {
+        padding: 40px 0 60px;
+        min-height: calc(100vh - 160px);
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #f5f7f6 0%, #e8ece9 100%);
+    }
+
+    .auth-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 32px 28px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .auth-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+        color: var(--primary-dark);
+        font-size: 1.5rem;
+    }
+
+    .auth-title {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 700;
+        color: var(--primary-dark);
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+    }
+
+    .auth-subtitle {
+        color: var(--gray);
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+
+    .auth-form .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--primary-dark);
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .form-label i {
+        color: var(--gold);
+        width: 18px;
+        font-size: 0.85rem;
+    }
+
+    .required-star {
+        color: #dc3545;
+        margin-left: 2px;
+    }
+
+    .form-control {
+        border: 2px solid rgba(11, 59, 59, 0.08);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        background: var(--white);
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .form-control:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.08);
+        outline: none;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+        background-size: 200% 200%;
+        color: var(--dark);
+        border: none;
+        padding: 12px 24px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        border-radius: 50px;
+        transition: all 0.4s ease;
+        animation: goldShimmer 3s ease infinite;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .btn-gold:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
+        color: var(--dark);
+    }
+
+    @keyframes goldShimmer {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 18px;
+        font-size: 0.85rem;
+        color: var(--gray);
+    }
+
+    .auth-footer a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s;
+    }
+
+    .auth-footer a:hover {
+        color: var(--gold-dark);
+        text-decoration: underline;
+    }
+
+    /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+    @media (max-width: 768px) {
+        .auth-section {
+            padding: 30px 0 40px;
+            min-height: calc(100vh - 140px);
+        }
+
+        .auth-card {
+            padding: 24px 18px;
+            border-radius: 16px;
+        }
+
+        .auth-title {
+            font-size: 1.3rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .auth-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+        }
+
+        .form-control {
+            padding: 9px 12px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+
+        .btn-gold {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 14px;
+        }
+
+        .auth-footer {
+            font-size: 0.8rem;
+            margin-top: 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .auth-section {
+            padding: 20px 0 30px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .auth-card {
+            padding: 18px 14px;
+            border-radius: 14px;
+        }
+
+        .auth-title {
+            font-size: 1.1rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.75rem;
+        }
+
+        .auth-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .form-label {
+            font-size: 0.7rem;
+        }
+
+        .form-control {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            border-width: 1.5px;
+        }
+
+        .btn-gold {
+            padding: 9px 16px;
+            font-size: 0.8rem;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 12px;
+        }
+
+        .auth-footer {
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+
+        .auth-header {
+            margin-bottom: 18px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .auth-card {
+            padding: 14px 10px;
+            border-radius: 12px;
+        }
+
+        .auth-title {
+            font-size: 1rem;
+        }
+
+        .form-control {
+            padding: 6px 8px;
+            font-size: 0.75rem;
+        }
+
+        .btn-gold {
+            padding: 8px 14px;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
